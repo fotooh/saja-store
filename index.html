@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجى ستور - متجر ملابس في صنعاء</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/font.css">
+    <style>
+         /* تحسينات لوحة التحكم */
+         :root {
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --success: #28a745;
+            --info: #17a2b8;
+
+         }
+        .dashboard {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            padding: 30px 0;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .dashboard-header h2 {
+            color: var(--dark);
+            font-size: 1.8rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dashboard-header h2 i {
+            color: var(--primary);
+        }
+
+        #logout-btn {
+            background: var(--gradient);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        #logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(194, 69, 216, 0.3);
+        }
+
+        .dashboard-tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            background-color: rgba(194, 69, 216, 0.05);
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background-color: rgba(194, 69, 216, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .dashboard-table th {
+            background: #f8f9fa;
+            font-weight: 700;
+            color: var(--dark);
+            padding: 15px;
+            text-align: right;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .dashboard-table td {
+            padding: 15px;
+            text-align: right;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+
+        .dashboard-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dashboard-table tr:hover {
+            background-color: rgba(194, 69, 216, 0.03);
+        }
+
+        .product-image-thumb {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .edit-btn {
+            background: var(--warning);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #e0a800;
+        }
+
+        .delete-btn {
+            background: var(--danger);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .save-btn {
+            background: var(--success);
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #218838;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+         /* تجاوبية لوحة التحكم */
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .dashboard-tabs {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                justify-content: right;
+                border-bottom: none;
+                border-left: 3px solid transparent;
+            }
+            
+            .tab-btn.active {
+                border-left: 3px solid var(--primary);
+                border-bottom: none;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+         /* تصميم رفع الصور */
+        .image-upload-container {
+            margin-bottom: 20px;
+        }
+
+        .image-upload-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .image-upload-box {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: #fafafa;
+        }
+
+        .image-upload-box:hover {
+            border-color: var(--primary);
+            background: rgba(194, 69, 216, 0.05);
+        }
+
+        .image-upload-box.has-image {
+            border-style: solid;
+            border-color: var(--success);
+            background: rgba(40, 167, 69, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .image-upload-box.has-image .upload-icon {
+            color: var(--success);
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .image-upload-box.has-image .upload-text {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .upload-btn {
+            background: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: 500;
+            display: inline-block;
+            transition: var(--transition);
+        }
+
+        .image-upload-box.has-image .upload-btn {
+            background: var(--success);
+        }
+
+        .upload-btn:hover {
+            opacity: 0.9;
+        }
+
+        #image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        #product-image {
+            display: none;
+        }
+
+        .image-preview-container {
+            text-align: center;
+        }
+
+        .remove-image {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+         /* تحسينات النماذج */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(194, 69, 216, 0.1);
+            outline: none;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background: var(--gradient);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px auto 0;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(194, 69, 216, 0.3);
+        }
+
+
+    </style>
+    
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="images/logo.png" alt="سجى ستور">
+                    <h1>سجى ستور</h1>
+                </div>
+                
+                <div class="mobile-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+                
+                <nav>
+                    <ul>
+                        <li><a href="#home">الرئيسية</a></li>
+                        <li><a href="#products">المنتجات</a></li>
+                        <li><a href="contact.html">اتصل بنا</a></li>
+                        <li><a href="#" class="login-btn">تسجيل الدخول</a></li>
+                        <li><a href="#" class="register-btn">إنشاء حساب</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <div class="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count">0</span>
+                    </div>
+                    
+                    
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="container">
+            <h2>أحدث صيحات الموضة في صنعاء</h2>
+            <p>اكتشف تشكيلتنا الواسعة من الملابس العصرية والأنيقة المناسبة لكل المناسبات</p>
+            <a href="#products" class="cta-button">تسوق الآن</a>
+        </div>
+    </section>
+
+    <section class="filters">
+        <div class="container">
+            <div class="filter-row">
+                <div class="search-box">
+                    <input type="text" placeholder="ابحث عن منتج...">
+                    <i class="fas fa-search"></i>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="category-filter">الفئة:</label>
+                    <select id="category-filter">
+                        <option value="">جميع الفئات</option>
+                        <option value="رجالي">رجالي</option>
+                        <option value="نسائي">نسائي</option>
+                        <option value="أطفال">أطفال</option>
+                    </select>
+                    
+                </div>
+                
+                <div class="filter-group">
+                      <label for="size-filter">المقاس:</label>
+                    <select id="size-filter">
+                        <option value="">جميع المقاسات</option>
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                    </select>
+                  
+                </div>
+                
+                <div class="filter-group">
+                    <label for="color-filter">اللون:</label>
+                    <select id="color-filter">
+                        <option value="">جميع الألوان</option>
+                        <option value="أحمر">أحمر</option>
+                        <option value="أزرق">أزرق</option>
+                        <option value="أخضر">أخضر</option>
+                        <option value="أسود">أسود</option>
+                        <option value="أبيض">أبيض</option>
+                    </select>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="products-section" id="products">
+        <div class="container">
+            <h2 class="section-title">منتجاتنا</h2>
+            <div class="products-grid" id="products-container">
+                <!-- سيتم ملء المنتجات ديناميكياً -->
+            </div>
+        </div>
+    </section>
+
+    <div class="overlay" id="cart-overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>سلة المشتريات</h3>
+            <button class="close-cart"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="cart-items" id="cart-items">
+            <!-- سيتم ملء عناصر السلة ديناميكياً -->
+        </div>
+        
+        <div class="cart-total">
+            <span>المجموع:</span>
+            <span id="cart-total-price">0 ريال يمني</span>
+        </div>
+        
+        <button class="checkout-btn">إتمام الشراء</button>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>سجى ستور</h3>
+                    <p>متجر سجى ستور يقدم لكم أحدث صيحات الموضة في صنعاء بأسعار مناسبة وجودة عالية.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>روابط سريعة</h3>
+                    <ul>
+                        <li><a href="#home">الرئيسية</a></li>
+                        <li><a href="#products">المنتجات</a></li>
+                        <li><a href="contact.html">اتصل بنا</a></li>
+                        <li><a href="#login" class="login-btn">تسجيل الدخول</a></li>
+                        <li><a href="#signup" class="register-btn">إنشاء حساب</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>معلومات الاتصال</h3>
+                    <ul>
+                        <li><i class="fas fa-map-marker-alt"></i> صنعاء، اليمن</li>
+                        <li><i class="fas fa-phone"></i> +967 123 456 789</li>
+                        <li><i class="fas fa-envelope"></i> info@saja-store.com</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>جميع الحقوق محفوظة &copy; 2023 سجى ستور</p>
+            </div>
+        </div>
+    </footer>
+
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <h2><i class="fas fa-tachometer-alt"></i> لوحة التحكم - إدارة المتجر</h2>
+                <button id="logout-btn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
+            </div>
+            
+            <div class="dashboard-tabs">
+                <button class="tab-btn active" data-tab="products-tab">
+                    <i class="fas fa-box"></i> إدارة المنتجات
+                </button>
+                <button class="tab-btn" data-tab="orders-tab">
+                    <i class="fas fa-clipboard-list"></i> الطلبات
+                </button>
+                <button class="tab-btn" data-tab="add-product-tab">
+                    <i class="fas fa-plus-circle"></i> إضافة منتج
+                </button>
+            </div>
+            
+            <div class="tab-content active" id="products-tab">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>الصورة</th>
+                            <th>الاسم</th>
+                            <th>السعر</th>
+                            <th>الكمية</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboard-products">
+                        <!-- سيتم ملء المنتجات ديناميكياً -->
+                       
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="tab-content" id="orders-tab">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>رقم الطلب</th>
+                            <th>العميل</th>
+                            <th>التاريخ</th>
+                            <th>المجموع</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <!-- سيتم ملء الطلبات ديناميكياً -->
+                       
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="tab-content" id="add-product-tab">
+                <form id="add-product-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="product-name">اسم المنتج</label>
+                            <input type="text" id="product-name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="product-price">السعر (ريال يمني)</label>
+                            <input type="number" id="product-price" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="product-quantity">الكمية</label>
+                            <input type="number" id="product-quantity" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="product-category">الفئة</label>
+                            <select id="product-category" required>
+                                <option value="رجالي">رجالي</option>
+                                <option value="نسائي">نسائي</option>
+                                <option value="أطفال">أطفال</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="product-size">المقاس</label>
+                            <select id="product-size" required>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="product-color">اللون</label>
+                            <select id="product-color" required>
+                                <option value="أحمر">أحمر</option>
+                                <option value="أزرق">أزرق</option>
+                                <option value="أخضر">أخضر</option>
+                                <option value="أسود">أسود</option>
+                                <option value="أبيض">أبيض</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="product-description">الوصف</label>
+                        <textarea id="product-description" required></textarea>
+                    </div>
+                    
+                   <div class="image-upload-container">
+                        <label class="image-upload-label">صورة المنتج</label>
+                        <div class="image-upload-box" id="image-upload-box">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <p class="upload-text">انقر لرفع صورة أو اسحبها هنا</p>
+                            <div class="upload-btn">اختر صورة</div>
+                            <input type="file" id="product-image" accept="image/*">
+                        </div>
+                        <div class="image-preview-container">
+                            <img id="image-preview" src="#" alt="معاينة الصورة">
+                            <button type="button" class="remove-image" id="remove-image">إزالة الصورة</button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-plus-circle"></i> إضافة المنتج
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <div class="auth-modal" id="auth-modal">
+        <div class="auth-form">
+            <button class="close-auth"><i class="fas fa-close"></i></button>
+            
+            <div class="auth-header">
+                <h2>سجى ستور</h2>
+                <p>مرحباً بك في متجرنا</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-auth="login">تسجيل الدخول</button>
+                <button class="auth-tab" data-auth="register">إنشاء حساب</button>
+            </div>
+            
+            <form id="login-form" class="auth-tab-content active">
+                <div class="form-group">
+                    <label for="login-email">البريد الإلكتروني</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password">كلمة المرور</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                
+                <button type="submit" class="submit-btn" style="width: 100%;">تسجيل الدخول</button>
+            </form>
+            
+            <form id="register-form" class="auth-tab-content">
+                <div class="form-group">
+                    <label for="register-name">الاسم الكامل</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-email">البريد الإلكتروني</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-password">كلمة المرور</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-phone">رقم الهاتف</label>
+                    <input type="tel" id="register-phone" required>
+                </div>
+                
+                <button type="submit" class="submit-btn" style="width: 100%;">إنشاء حساب</button>
+            </form>
+        </div>
+    </div>
+    <script type="module" src="js/supabase.js"></script>
+    <script type="module" src="js/script.js"></script>
+    <script>
+        
+        // معالجة رفع الصور
+        const imageInput = document.getElementById('product-image');
+        const imageUploadBox = document.getElementById('image-upload-box');
+        const imagePreview = document.getElementById('image-preview');
+        const removeImageBtn = document.getElementById('remove-image');
+        
+        // فتح نافذة اختيار الملف عند النقر على منطقة الرفع
+        imageUploadBox.addEventListener('click', () => {
+            imageInput.click();
+        });
+        
+        // معالجة اختيار الملف
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    imageUploadBox.classList.add('has-image');
+                    removeImageBtn.style.display = 'inline-block';
+                }
+                
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+        
+        // إزالة الصورة المختارة
+        removeImageBtn.addEventListener('click', function() {
+            imageInput.value = '';
+            imagePreview.style.display = 'none';
+            imageUploadBox.classList.remove('has-image');
+            this.style.display = 'none';
+        });
+        
+        // دعم السحب والإفلات
+        imageUploadBox.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'rgb(194, 69, 216)';
+            this.style.backgroundColor = 'rgba(194, 69, 216, 0.1)';
+        });
+        
+        imageUploadBox.addEventListener('dragleave', function() {
+            this.style.borderColor = '#ddd';
+            this.style.backgroundColor = '#fafafa';
+        });
+        
+        imageUploadBox.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ddd';
+            this.style.backgroundColor = '#fafafa';
+            
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                imageInput.files = e.dataTransfer.files;
+                const event = new Event('change');
+                imageInput.dispatchEvent(event);
+            }
+        });
+
+        
+
+        // زر تسجيل الخروج
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                  signOut();
+                alert('تم تسجيل الخروج بنجاح');
+            }
+        });
+    </script>
+</body>
+</html>
