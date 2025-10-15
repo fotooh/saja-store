@@ -69,7 +69,6 @@
         .logo img {
             height: 90px;
             width: 90px;
-            margin-left: 10px;
         }
 
         .logo h1 {
@@ -80,6 +79,7 @@
 
         nav ul {
             display: flex;
+            align-items: self-end;
         }
 
         nav ul li {
@@ -105,8 +105,9 @@
 
         .cart-icon {
             position: relative;
-            margin-left: 15px;
             font-size: 20px;
+            cursor: pointer;
+            transition: color 0.3s ease;
         }
 
         .cart-count {
@@ -310,6 +311,7 @@
             z-index: 1100;
             transition: var(--transition);
             overflow-y: auto;
+
         }
 
         .cart-sidebar.active {
@@ -683,6 +685,8 @@
         }
 
         @media (max-width: 768px) {
+    
+           
             .header-content {
                 flex-wrap: wrap;
             }
@@ -691,20 +695,15 @@
                 font-size: 1.5rem;
             }
             
-            /* nav {
-                order: 3;
-                width: 100%;
-                margin-top: 15px;
-                display: none;
-            } */
+
             nav {
                 position: fixed;
                 top: 120px;
                 left: 0;
                 width: 60%;
                 height: calc(100vh - 80px);
-                background-color: var(--white);
-                box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+                background-color: var(--light);
+                box-shadow: 2px 0 15px rgba(255, 255, 255, 0.1);
                 transform: translateX(-100%); /* مخفية من اليسار */
                 transition: transform 0.3s ease;
                 overflow-y: auto;
@@ -764,16 +763,15 @@
             }
         }
         .logout-icon {
-  font-size: 22px;   /* حجم الأيقونة */
-  color: var(--secondary);    /* اللون (أحمر) */
-  cursor: pointer;   /* يجعلها قابلة للنقر */
-  transition: color 0.3s ease;
-  margin-left: 20px;
-  margin-right: 10px;
-}
+               cursor: pointer;
+               transition: color 0.3s ease;
+               position: relative;
+               margin-left: 15px;
+               font-size: 22px;
+                  }
 
 .logout-icon:hover {
-  color: #c0392b;   /* لون عند المرور بالماوس */
+  color: #c0392b;
 }
 .user-info {
     display: flex;
@@ -784,6 +782,7 @@
     display: none !important;
 }
 .settings-icon {
+    position: relative;
   font-size: 20px;   /* حجم الأيقونة */
   color: var(--secondary);    /* أزرق */
   cursor: pointer;
@@ -1099,4 +1098,36 @@
 
 .product-card:hover .product-image {
     transform: scale(1.05);
+}
+@media (max-width: 768px) {
+    /* إصلاح سلة المشتريات في الموبايل */
+    .cart-sidebar {
+        width: 100vw; /* عرض كامل للشاشة */
+        max-width: 100vw; /* التأكد من عدم تجاوز العرض */
+        right: -100vw; /* إخفاء كامل خارج الشاشة */
+        transform: none; /* إلغاء أي تحويلات */
+    }
+    
+    .cart-sidebar.active {
+        right: 0; /* إظهار كامل عند التنشيط */
+    }
+    
+    /* منع التمرير الأفقي للجسم عندما تكون السلة مفتوحة */
+    body.cart-open {
+        overflow: hidden;
+    }
+    
+    /* التأكد من أن محتوى السلة يتناسب مع الشاشة */
+    .cart-header,
+    .cart-items,
+    .cart-total,
+    .checkout-btn {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .cart-items {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
 }

@@ -421,7 +421,6 @@ async function checkUserRole() {
             phone: profile.phone
         };
 
-        console.log('تم تحديد دور المستخدم:', currentUser);
         updateUI();
     } catch (error) {
         console.error('خطأ عند التحقق من دور المستخدم:', error);
@@ -1045,15 +1044,17 @@ function updateUI() {
         // تحديث header-actions
         if (headerActions) {
             headerActions.innerHTML = `
-                <div class="cart-icon">
+                <li><a href="#home">الرئيسية</a></li>
+                <li><a href="#products">المنتجات</a></li>
+                <li><a href="contact.html">اتصل بنا</a></li>
+                <li><a href="#" class="login-btn">تسجيل الدخول</a></li>
+                <li><a href="#" class="register-btn">إنشاء حساب</a></li>
+                <li class="cart-icon">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count">${cart.reduce((total, item) => total + item.quantity, 0)}</span>
-                </div>
-                <div class="user-info">
-                    <i class="fas fa-sign-out-alt logout-icon" id="logout-btn-header"></i>
-                    <span>مرحباً، ${currentUser.full_name}</span>
-                    ${adminButton}
-                </div>
+                </li>
+                <li class="user-info"><i class="fas fa-sign-out-alt logout-icon" id="logout-btn-header"></i></li>
+                <li class="user-info"><span>مرحباً، ${currentUser.full_name}</span>${adminButton}</li>
             `;
             
             // ✅ إصلاح: تحديث المرجع بعد تغيير الـ DOM
