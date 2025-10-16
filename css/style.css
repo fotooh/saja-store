@@ -79,7 +79,7 @@
 
         nav ul {
             display: flex;
-            align-items: self-end;
+            align-items:end;
         }
 
         nav ul li {
@@ -108,6 +108,7 @@
             font-size: 20px;
             cursor: pointer;
             transition: color 0.3s ease;
+            padding-top: 4px;
         }
 
         .cart-count {
@@ -695,6 +696,7 @@
                 font-size: 1.5rem;
             }
             
+            
 
             nav {
                 position: fixed;
@@ -717,6 +719,7 @@
             nav ul {
                 flex-direction: column;
                 padding: 20px;
+                align-items: center;
             }
             
             nav ul li {
