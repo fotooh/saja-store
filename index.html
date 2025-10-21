@@ -7,412 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/font.css">
-    <style>
-         /* تحسينات لوحة التحكم */
-         :root {
-            --warning: #ffc107;
-            --danger: #dc3545;
-            --success: #28a745;
-            --info: #17a2b8;
-
-         }
-        .dashboard {
-            background-color: #f8f9fa;
-            min-height: 100vh;
-            padding: 30px 0;
-        }
-
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-        }
-
-        .dashboard-header h2 {
-            color: var(--dark);
-            font-size: 1.8rem;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .dashboard-header h2 i {
-            color: var(--primary);
-        }
-
-        #logout-btn {
-            background: var(--gradient);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-        #logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(194, 69, 216, 0.3);
-        }
-
-        .dashboard-tabs {
-            display: flex;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            margin-bottom: 25px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 15px 20px;
-            background: none;
-            border: none;
-            font-weight: 600;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .tab-btn:hover {
-            background-color: rgba(194, 69, 216, 0.05);
-            color: var(--primary);
-        }
-
-        .tab-btn.active {
-            color: var(--primary);
-            border-bottom: 3px solid var(--primary);
-            background-color: rgba(194, 69, 216, 0.1);
-        }
-
-        .tab-content {
-            display: none;
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: var(--shadow);
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .dashboard-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .dashboard-table th {
-            background: #f8f9fa;
-            font-weight: 700;
-            color: var(--dark);
-            padding: 15px;
-            text-align: right;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .dashboard-table td {
-            padding: 15px;
-            text-align: right;
-            border-bottom: 1px solid #e9ecef;
-            vertical-align: middle;
-        }
-
-        .dashboard-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .dashboard-table tr:hover {
-            background-color: rgba(194, 69, 216, 0.03);
-        }
-
-        .product-image-thumb {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 5px;
-            border: 1px solid #e9ecef;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .action-btn {
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .edit-btn {
-            background: var(--warning);
-            color: white;
-        }
-
-        .edit-btn:hover {
-            background: #e0a800;
-        }
-
-        .delete-btn {
-            background: var(--danger);
-            color: white;
-        }
-
-        .delete-btn:hover {
-            background: #c82333;
-        }
-
-        .save-btn {
-            background: var(--success);
-            color: white;
-        }
-
-        .save-btn:hover {
-            background: #218838;
-        }
-
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-completed {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-processing {
-            background: #cce5ff;
-            color: #004085;
-        }
-         /* تجاوبية لوحة التحكم */
-        @media (max-width: 768px) {
-            .dashboard-header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-            
-            .dashboard-tabs {
-                flex-direction: column;
-            }
-            
-            .tab-btn {
-                justify-content: right;
-                border-bottom: none;
-                border-left: 3px solid transparent;
-            }
-            
-            .tab-btn.active {
-                border-left: 3px solid var(--primary);
-                border-bottom: none;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .dashboard-table {
-                display: block;
-                overflow-x: auto;
-            }
-        }
-         /* تصميم رفع الصور */
-        .image-upload-container {
-            margin-bottom: 20px;
-        }
-
-        .image-upload-label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .image-upload-box {
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            background: #fafafa;
-        }
-
-        .image-upload-box:hover {
-            border-color: var(--primary);
-            background: rgba(194, 69, 216, 0.05);
-        }
-
-        .image-upload-box.has-image {
-            border-style: solid;
-            border-color: var(--success);
-            background: rgba(40, 167, 69, 0.05);
-        }
-
-        .upload-icon {
-            font-size: 40px;
-            color: #aaa;
-            margin-bottom: 10px;
-        }
-
-        .image-upload-box.has-image .upload-icon {
-            color: var(--success);
-        }
-
-        .upload-text {
-            color: #666;
-            margin-bottom: 15px;
-        }
-
-        .image-upload-box.has-image .upload-text {
-            color: var(--success);
-            font-weight: 600;
-        }
-
-        .upload-btn {
-            background: var(--primary);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-weight: 500;
-            display: inline-block;
-            transition: var(--transition);
-        }
-
-        .image-upload-box.has-image .upload-btn {
-            background: var(--success);
-        }
-
-        .upload-btn:hover {
-            opacity: 0.9;
-        }
-
-        #image-preview {
-            max-width: 100%;
-            max-height: 200px;
-            margin-top: 15px;
-            border-radius: 5px;
-            display: none;
-        }
-
-        #product-image {
-            display: none;
-        }
-
-        .image-preview-container {
-            text-align: center;
-        }
-
-        .remove-image {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-         /* تحسينات النماذج */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            transition: var(--transition);
-            font-size: 1rem;
-        }
-
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(194, 69, 216, 0.1);
-            outline: none;
-        }
-
-        .form-group textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .submit-btn {
-            background: var(--gradient);
-            color: white;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 20px auto 0;
-            transition: var(--transition);
-            border: none;
-            cursor: pointer;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(194, 69, 216, 0.3);
-        }
-
-
-    </style>
-    
 </head>
 <body>
     <header>
@@ -453,6 +47,25 @@
             <a href="#products" class="cta-button">تسوق الآن</a>
         </div>
     </section>
+  <!-- استبدل قسم العروض بهذا الكود -->
+<section class="offers-slider">
+    <div class="container">
+        <div class="slider-container">
+            <div class="slider-track" id="slider-track">
+                <!-- سيتم ملء العروض ديناميكياً من Supabase -->
+            </div>
+            
+            <div class="slider-nav">
+                <button id="prev-slide"><i class="fas fa-chevron-right"></i></button>
+                <button id="next-slide"><i class="fas fa-chevron-left"></i></button>
+            </div>
+            
+            <div class="slider-dots" id="slider-dots">
+                <!-- سيتم إضافة النقاط ديناميكياً -->
+            </div>
+        </div>
+    </div>
+</section>
 
     <section class="filters">
         <div class="container">
@@ -588,17 +201,84 @@
                 </button>
             </div>
             
-            <div class="dashboard-tabs">
-                <button class="tab-btn active" data-tab="products-tab">
-                    <i class="fas fa-box"></i> إدارة المنتجات
+           <!-- في قسم dashboard-tabs -->
+<div class="dashboard-tabs">
+    <button class="tab-btn active" data-tab="products-tab">
+        <i class="fas fa-box"></i> إدارة المنتجات
+    </button>
+    <button class="tab-btn" data-tab="orders-tab">
+        <i class="fas fa-clipboard-list"></i> الطلبات
+    </button>
+    <button class="tab-btn" data-tab="offers-tab">
+        <i class="fas fa-images"></i> إدارة العروض
+    </button>
+    <button class="tab-btn" data-tab="add-product-tab">
+        <i class="fas fa-plus-circle"></i> إضافة منتج
+    </button>
+</div>
+<!-- بعد تبويب الطلبات -->
+<div class="tab-content" id="offers-tab">
+    <div class="tab-header">
+        <h3>إدارة العروض</h3>
+        <button class="submit-btn" id="add-offer-btn">
+            <i class="fas fa-plus-circle"></i> إضافة عرض جديد
+        </button>
+    </div>
+    
+    <div class="offers-grid" id="offers-grid">
+        <!-- سيتم ملء العروض ديناميكياً -->
+    </div>
+    
+    <!-- نموذج إضافة/تعديل العرض -->
+    <div class="offer-form-container" id="offer-form-container" style="display: none;">
+        <form id="offer-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="offer-title">عنوان العرض</label>
+                    <input type="text" id="offer-title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="offer-description">وصف العرض</label>
+                    <input type="text" id="offer-description" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="offer-button-text">نص زر العرض</label>
+                    <input type="text" id="offer-button-text" value="تسوق الآن" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="offer-link">رابط العرض (اختياري)</label>
+                    <input type="text" id="offer-link" placeholder="#products">
+                </div>
+            </div>
+            
+            <div class="image-upload-container">
+                <label class="image-upload-label">صورة العرض</label>
+                <div class="image-upload-box" id="offer-image-upload-box">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p class="upload-text">انقر لرفع صورة العرض أو اسحبها هنا</p>
+                    <div class="upload-btn">اختر صورة</div>
+                    <input type="file" id="offer-image" accept="image/*">
+                </div>
+                <div class="image-preview-container">
+                    <img id="offer-image-preview" src="#" alt="معاينة صورة العرض" style="display: none;">
+                    <button type="button" class="remove-image" id="remove-offer-image" style="display: none;">إزالة الصورة</button>
+                </div>
+            </div>
+             
+            <div class="form-actions">
+                <button type="submit" class="submit-btn" id="save-offer-btn">
+                    <i class="fas fa-save"></i> حفظ العرض
                 </button>
-                <button class="tab-btn" data-tab="orders-tab">
-                    <i class="fas fa-clipboard-list"></i> الطلبات
-                </button>
-                <button class="tab-btn" data-tab="add-product-tab">
-                    <i class="fas fa-plus-circle"></i> إضافة منتج
+                <button type="button" class="delete-btn" id="cancel-offer-btn">
+                    <i class="fas fa-times"></i> إلغاء
                 </button>
             </div>
+        </form>
+    </div>
+</div>
             
             <div class="tab-content active" id="products-tab">
                 <table class="dashboard-table">
@@ -767,6 +447,7 @@
     </div>
     <script type="module" src="js/supabase.js"></script>
     <script type="module" src="js/script.js"></script>
+    <script type="module" src="js/offers.js"></script>
     <script>
         
         // معالجة رفع الصور
