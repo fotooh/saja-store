@@ -539,14 +539,24 @@ async function signOut() {
 }
 
 async function addProduct() {
+  // جلب الزر من خلال الـ class
+  const addButton = document.querySelector('.submit-btn');
+
   try {
+    // 🔹 حفظ النص الأصلي للزر
+    const originalText = addButton.innerHTML;
+
+    // 🔹 إظهار حالة التحميل على الزر
+    addButton.disabled = true;
+    addButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...`;
+
     // التحقق من الصلاحيات
     if (!currentUser || currentUser.role !== 'admin') {
       showMessage('ليس لديك صلاحية لإضافة منتجات!', 'error');
       return;
     }
 
-    // قراءة القيم من الحقول (نفس الكود السابق)
+    // قراءة القيم من الحقول
     const name = document.getElementById('product-name')?.value.trim();
     const priceValue = document.getElementById('product-price')?.value.trim();
     const quantityValue = document.getElementById('product-quantity')?.value.trim();
@@ -563,7 +573,7 @@ async function addProduct() {
     const price = parseInt(priceValue);
     const quantity = parseInt(quantityValue);
 
-    // رفع الصورة (نفس الكود السابق)
+    // رفع الصورة
     let imageUrl = null;
     const fileInput = document.getElementById('product-image');
     
@@ -583,7 +593,7 @@ async function addProduct() {
       imageUrl = supabase.storage.from('images').getPublicUrl(`products/${cleanFileName}`).data.publicUrl;
     }
 
-    // تجهيز بيانات المنتج مع إضافة user_id
+    // تجهيز بيانات المنتج
     const productData = {
       name,
       price,
@@ -593,7 +603,7 @@ async function addProduct() {
       color: color || null,
       description: description || null,
       image: imageUrl || null,
-      user_id: currentUser.id // ← الإضافة المهمة
+      user_id: currentUser.id
     };
 
     // إضافة المنتج
@@ -612,10 +622,14 @@ async function addProduct() {
     // إعادة تعيين النموذج
     if (addProductForm) addProductForm.reset();
 
-    showMessage('تم إضافة المنتج بنجاح!', 'success');
+    showMessage('✅ تم إضافة المنتج بنجاح!', 'success');
   } catch (error) {
     console.error('Error adding product:', error);
-    showMessage('خطأ في إضافة المنتج: ' + (error.message || JSON.stringify(error)), 'error');
+    showMessage('❌ خطأ في إضافة المنتج: ' + (error.message || JSON.stringify(error)), 'error');
+  } finally {
+    // 🔹 إعادة الزر إلى حالته الأصلية
+    addButton.disabled = false;
+    addButton.innerHTML = `<i class="fas fa-plus-circle"></i> إضافة المنتج`;
   }
 }
 
