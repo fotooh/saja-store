@@ -616,10 +616,10 @@ async function signIn(email, password) {
         await checkUserRole();
         
         if (authModal) authModal.classList.remove('active');
-        showMessage('✅ تم تسجيل الدخول بنجاح!', 'success');
+        showMessage('تم تسجيل الدخول بنجاح!', 'success');
         
     } catch (error) {
-        showMessage('❌ خطأ في تسجيل الدخول: ' + (error.message || 'بيانات الدخول غير صحيحة'), 'error');
+        showMessage(' خطأ في تسجيل الدخول: ' + (error.message || 'بيانات الدخول غير صحيحة'), 'error');
     }
 }
 
@@ -637,10 +637,10 @@ async function signOut() {
         currentUser = null;
         cart = []; // تفريغ السلة
         updateUI();
-        showMessage('✅ تم تسجيل الخروج بنجاح!', 'success');
+        showMessage('تم تسجيل الخروج بنجاح!', 'success');
         
     } catch (error) {
-        showMessage('❌ خطأ في تسجيل الخروج: ' + (error.message || 'حدث خطأ غير متوقع'), 'error');
+        showMessage('خطأ في تسجيل الخروج: ' + (error.message || 'حدث خطأ غير متوقع'), 'error');
     }
 }
 
@@ -788,7 +788,7 @@ async function addProduct() {
     }
 
     // 🔹 إظهار رسالة النجاح
-    showMessage('✅ تم إضافة المنتج بنجاح!', 'success');
+    showMessage('تم إضافة المنتج بنجاح!', 'success');
 
     // 🔹 التبديل تلقائياً إلى تبويب المنتجات لمشاهدة المنتج المضاف
     const productsTabBtn = document.querySelector('.tab-btn[data-tab="products-tab"]');
