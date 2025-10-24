@@ -116,6 +116,20 @@ function setupEventListeners() {
             cartOverlay.addEventListener('click', closeCartSidebar);
         }
     }
+    tabBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tabId = this.getAttribute('data-tab');
+        
+        if (tabId === 'offers-tab') {
+            // تأخير تهيئة العروض لضمان تحميل العناصر
+            setTimeout(() => {
+                if (typeof initializeOfferManagement === 'function') {
+                    initializeOfferManagement();
+                }
+            }, 100);
+        }
+    });
+});
     
     // ربط الأحداث مباشرة بعد التهيئة
     bindCartEvents();
@@ -149,7 +163,6 @@ function setupEventListeners() {
     if (cartIcon) {
         cartIcon.addEventListener('click', openCart);
     } else {
-        console.log('❌ زر السلة غير موجود!');
     }
     
     if (closeCart) {
@@ -205,15 +218,18 @@ function setupEventListeners() {
     });
     
     // تسجيل الدخول
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
+   if (loginForm) {
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        
+        try {
             await signIn(email, password);
-        });
-    }
+        } catch (error) {
+        }
+    });
+}
     
     // تسجيل حساب جديد
     if (registerForm) {
@@ -230,10 +246,13 @@ function setupEventListeners() {
     
     // تسجيل الخروج
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', async function() {
+    logoutBtn.addEventListener('click', async function() {
+        try {
             await signOut();
-        });
-    }
+        } catch (error) {
+        }
+    });
+}
     
     // تبديل علامات التبويب في لوحة التحكم
     tabBtns.forEach(btn => {
@@ -323,7 +342,6 @@ async function loadProducts() {
         products = data || [];
         renderProducts();
     } catch (error) {
-        console.error('Error loading products:', error);
         if (productsContainer) {
             productsContainer.innerHTML = '<div class="message error">حدث خطأ في تحميل المنتجات</div>';
         }
@@ -350,18 +368,20 @@ async function loadOrders() {
         orders = data || [];
         renderOrders();
     } catch (error) {
-        console.error('Error loading orders:', error);
         showMessage('حدث خطأ في تحميل الطلبات', 'error');
     }
 }
 
-// تحميل المستخدمين (للمدير فقط)
+
 async function loadUsers() {
     try {
-        if (!currentUser || currentUser.role !== 'admin') {
+        // التحقق من الصلاحيات أولاً
+        const hasPermission = await checkAdminPermissions();
+        if (!hasPermission) {
             showMessage('ليس لديك صلاحية لعرض المستخدمين!', 'error');
             return;
         }
+        
         
         const { data, error } = await supabase
             .from('profiles')
@@ -371,22 +391,61 @@ async function loadUsers() {
         if (error) throw error;
         
         renderUsers(data || []);
+        
     } catch (error) {
-        console.error('Error loading users:', error);
-        showMessage('حدث خطأ في تحميل المستخدمين', 'error');
+        showMessage('حدث خطأ في تحميل المستخدمين: ' + error.message, 'error');
+    }
+}
+
+// التحقق من صلاحيات المدير
+async function checkAdminPermissions() {
+    try {
+        // إذا كان currentUser موجوداً ومدير، نعود مباشرة
+        if (currentUser && currentUser.role === 'admin') {
+            return true;
+        }
+        
+        // إذا لم يكن موجوداً، نتحقق من الجلسة
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+            return false;
+        }
+        
+        // التحقق من البريد الإلكتروني للمدير
+        const isAdmin = ADMIN_EMAILS.includes(user.email);
+        
+        // تحديث currentUser إذا كان مديراً
+        if (isAdmin && currentUser) {
+            currentUser.role = 'admin';
+        }
+        
+        return isAdmin;
+    } catch (error) {
+        return false;
     }
 }
 
 // التحقق من حالة المصادقة
 async function checkAuthState() {
-    const { data: { session } } = await supabase.auth.getSession();
-    currentUser = session?.user || null;
-    
-    if (currentUser) {
-        await checkUserRole();
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+            return;
+        }
+        
+        currentUser = session?.user || null;
+        
+        if (currentUser) {
+            await checkUserRole();
+        } else {
+            updateUI();
+        }
+    } catch (error) {
+        currentUser = null;
+        updateUI();
     }
-    
-    updateUI();
 }
 
 // التحقق من دور المستخدم وتحديث currentUser
@@ -395,9 +454,11 @@ async function checkUserRole() {
         // جلب جلسة المستخدم الحالية
         const { data: { user }, error: sessionError } = await supabase.auth.getUser();
 
-        if (sessionError) throw sessionError;
+        if (sessionError) {
+            throw sessionError;
+        }
+        
         if (!user) {
-            console.log('لا يوجد مستخدم مسجّل حالياً');
             currentUser = null;
             updateUI();
             return;
@@ -410,21 +471,53 @@ async function checkUserRole() {
             .eq('id', user.id)
             .single();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+            
+            // إذا لم يكن هناك ملف تعريف، ننشئ واحداً افتراضياً
+            if (profileError.code === 'PGRST116') {
+                await createUserProfile(user, user.email?.split('@')[0] || 'مستخدم', '');
+                
+                // إعادة محاولة جلب ملف التعريف
+                const { data: newProfile, error: newError } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, phone, role, email')
+                    .eq('id', user.id)
+                    .single();
+                    
+                if (newError) throw newError;
+                
+                profile = newProfile;
+            } else {
+                throw profileError;
+            }
+        }
 
         // تحديث currentUser بالبيانات من profiles
         currentUser = {
             id: user.id,
             email: user.email,
-            role: profile.role,
-            full_name: profile.full_name,
-            phone: profile.phone
+            role: profile?.role || 'customer',
+            full_name: profile?.full_name || user.email?.split('@')[0] || 'مستخدم',
+            phone: profile?.phone || ''
         };
 
         updateUI();
     } catch (error) {
-        console.error('خطأ عند التحقق من دور المستخدم:', error);
-        currentUser = null;
+        
+        // إنشاء مستخدم افتراضي في حالة الخطأ
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            currentUser = {
+                id: user.id,
+                email: user.email,
+                role: 'customer',
+                full_name: user.email?.split('@')[0] || 'مستخدم',
+                phone: ''
+            };
+        } else {
+            currentUser = null;
+        }
+        
         updateUI();
     }
 }
@@ -433,7 +526,6 @@ async function checkUserRole() {
 // إنشاء ملف تعريف للمستخدم الجديد
 async function createUserProfile(user, name, phone) {
     if (!user) {
-        console.error('لا يوجد مستخدم لإنشاء ملف تعريف له');
         return;
     }
 
@@ -443,12 +535,18 @@ async function createUserProfile(user, name, phone) {
             .from('profiles')
             .select('id')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
-        if (!checkError && existingProfile) {
-            console.log('ملف التعريف موجود مسبقاً');
+        if (checkError && checkError.code !== 'PGRST116') {
             return;
         }
+
+        if (existingProfile) {
+            return;
+        }
+
+        // تحديد الدور بناءً على البريد الإلكتروني
+        const userRole = ADMIN_EMAILS.includes(user.email) ? 'admin' : 'customer';
 
         const { data, error } = await supabase
             .from('profiles')
@@ -456,17 +554,18 @@ async function createUserProfile(user, name, phone) {
                 {
                     id: user.id,
                     email: user.email,
-                    full_name: name || user.user_metadata?.full_name || '',
+                    full_name: name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم',
                     phone: phone || user.user_metadata?.phone || '',
-                    role: 'customer'
+                    role: userRole
                 }
-            ]);
+            ])
+            .select();
 
-        if (error) throw error;
+        if (error) {
+            throw error;
+        }
 
-        console.log('تم إنشاء profile للمستخدم الجديد:', data);
     } catch (error) {
-        console.error('خطأ عند إنشاء profile:', error);
     }
 }
 
@@ -492,32 +591,35 @@ async function signUp(email, password, name, phone) {
 
         showMessage('تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني لتأكيد الحساب.', 'success');
         if (authModal) authModal.classList.remove('active');
-        updateUI();
+        updateUI().catch(console.error);
     } catch (error) {
-        console.error('خطأ في إنشاء الحساب:', error);
         showMessage('خطأ في إنشاء الحساب: ' + (error.message || JSON.stringify(error)), 'error');
     }
 }
 
 // تسجيل الدخول
+// تسجيل الدخول
 async function signIn(email, password) {
     try {
+        
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
         });
         
-        if (error) throw error;
+        if (error) {
+            throw error;
+        }
         
         currentUser = data.user;
+        
         await checkUserRole();
-        updateUI();
         
         if (authModal) authModal.classList.remove('active');
-        showMessage('تم تسجيل الدخول بنجاح!', 'success');
+        showMessage('✅ تم تسجيل الدخول بنجاح!', 'success');
+        
     } catch (error) {
-        console.error('Error signing in:', error);
-        showMessage('خطأ في تسجيل الدخول: ' + error.message, 'error');
+        showMessage('❌ خطأ في تسجيل الدخول: ' + (error.message || 'بيانات الدخول غير صحيحة'), 'error');
     }
 }
 
@@ -526,29 +628,51 @@ async function signIn(email, password) {
 // تسجيل الخروج
 async function signOut() {
     try {
+        
         const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        if (error) {
+            throw error;
+        }
         
         currentUser = null;
+        cart = []; // تفريغ السلة
         updateUI();
-        showMessage('تم تسجيل الخروج بنجاح!', 'success');
+        showMessage('✅ تم تسجيل الخروج بنجاح!', 'success');
+        
     } catch (error) {
-        console.error('Error signing out:', error);
-        showMessage('خطأ في تسجيل الخروج: ' + error.message, 'error');
+        showMessage('❌ خطأ في تسجيل الخروج: ' + (error.message || 'حدث خطأ غير متوقع'), 'error');
     }
 }
 
 async function addProduct() {
-  // جلب الزر من خلال الـ class
-  const addButton = document.querySelector('.submit-btn');
+
+    // التحقق من الصلاحيات أولاً
+    const hasPermission = await checkAdminPermissions();
+    if (!hasPermission) {
+        showMessage('ليس لديك صلاحية لإضافة منتجات!', 'error');
+        return;
+    }
+  // جلب الزر من خلال الـ class أو ID
+  const addButton = document.querySelector('.submit-btn') || 
+                   document.querySelector('#add-product-form button[type="submit"]');
+  
+  // إذا لم نجد الزر، استخدم الزر الافتراضي في النموذج
+  const form = document.getElementById('add-product-form');
+  if (!addButton && form) {
+    addButton = form.querySelector('button[type="submit"]');
+  }
 
   try {
     // 🔹 حفظ النص الأصلي للزر
-    const originalText = addButton.innerHTML;
+    const originalText = addButton ? addButton.innerHTML : 'إضافة المنتج';
+    const originalDisabled = addButton ? addButton.disabled : false;
 
     // 🔹 إظهار حالة التحميل على الزر
-    addButton.disabled = true;
-    addButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...`;
+    if (addButton) {
+      addButton.disabled = true;
+      addButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...`;
+      addButton.style.opacity = '0.7';
+    }
 
     // التحقق من الصلاحيات
     if (!currentUser || currentUser.role !== 'admin') {
@@ -566,12 +690,24 @@ async function addProduct() {
     const description = document.getElementById('product-description')?.value.trim();
 
     // التحقق من المدخلات
-    if (!name) return showMessage('الرجاء إدخال اسم المنتج!', 'error');
-    if (!priceValue || isNaN(parseInt(priceValue))) return showMessage('الرجاء إدخال سعر صحيح!', 'error');
-    if (!quantityValue || isNaN(parseInt(quantityValue))) return showMessage('الرجاء إدخال كمية صحيحة!', 'error');
+    if (!name) {
+      showMessage('الرجاء إدخال اسم المنتج!', 'error');
+      return;
+    }
+    if (!priceValue || isNaN(parseInt(priceValue))) {
+      showMessage('الرجاء إدخال سعر صحيح!', 'error');
+      return;
+    }
+    if (!quantityValue || isNaN(parseInt(quantityValue))) {
+      showMessage('الرجاء إدخال كمية صحيحة!', 'error');
+      return;
+    }
 
     const price = parseInt(priceValue);
     const quantity = parseInt(quantityValue);
+
+    // 🔹 إظهار رسالة بدء الرفع
+    showMessage('جاري رفع الصورة وإضافة المنتج...', 'info');
 
     // رفع الصورة
     let imageUrl = null;
@@ -579,18 +715,26 @@ async function addProduct() {
     
     if (fileInput && fileInput.files.length > 0) {
       const file = fileInput.files[0];
-      const cleanFileName = file.name.replace(/\s+/g, '_');
+      const cleanFileName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
 
+      
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('images')
         .upload(`products/${cleanFileName}`, file, {
           cacheControl: '3600',
-          upsert: true
+          upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw new Error('فشل في رفع الصورة: ' + uploadError.message);
+      }
 
-      imageUrl = supabase.storage.from('images').getPublicUrl(`products/${cleanFileName}`).data.publicUrl;
+      // الحصول على رابط الصورة
+      const { data: urlData } = supabase.storage
+        .from('images')
+        .getPublicUrl(`products/${cleanFileName}`);
+      
+      imageUrl = urlData.publicUrl;
     }
 
     // تجهيز بيانات المنتج
@@ -602,9 +746,13 @@ async function addProduct() {
       size: size || null,
       color: color || null,
       description: description || null,
-      image: imageUrl || null,
+      image: imageUrl,
       user_id: currentUser.id
     };
+
+
+    // 🔹 إظهار رسالة إضافة المنتج
+    showMessage('جاري إضافة المنتج إلى قاعدة البيانات...', 'info');
 
     // إضافة المنتج
     const { data, error } = await supabase
@@ -612,37 +760,66 @@ async function addProduct() {
       .insert([productData])
       .select();
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
+
 
     // تحديث القائمة
-    products.unshift(data[0]);
-    renderProducts();
-    renderDashboardProducts();
+    if (data && data[0]) {
+      products.unshift(data[0]);
+      renderProducts();
+      renderDashboardProducts();
+    }
 
     // إعادة تعيين النموذج
-    if (addProductForm) addProductForm.reset();
+    if (addProductForm) {
+      addProductForm.reset();
+      // إعادة تعيين معاينة الصورة
+      const imagePreview = document.getElementById('image-preview');
+      if (imagePreview) {
+        imagePreview.style.display = 'none';
+        imagePreview.src = '#';
+      }
+      const removeImageBtn = document.getElementById('remove-image');
+      if (removeImageBtn) removeImageBtn.style.display = 'none';
+      const imageUploadBox = document.getElementById('image-upload-box');
+      if (imageUploadBox) imageUploadBox.classList.remove('has-image');
+    }
 
+    // 🔹 إظهار رسالة النجاح
     showMessage('✅ تم إضافة المنتج بنجاح!', 'success');
+
+    // 🔹 التبديل تلقائياً إلى تبويب المنتجات لمشاهدة المنتج المضاف
+    const productsTabBtn = document.querySelector('.tab-btn[data-tab="products-tab"]');
+    if (productsTabBtn) {
+      productsTabBtn.click();
+    }
+
   } catch (error) {
-    console.error('Error adding product:', error);
     showMessage('❌ خطأ في إضافة المنتج: ' + (error.message || JSON.stringify(error)), 'error');
   } finally {
     // 🔹 إعادة الزر إلى حالته الأصلية
-    addButton.disabled = false;
-    addButton.innerHTML = `<i class="fas fa-plus-circle"></i> إضافة المنتج`;
+    if (addButton) {
+      addButton.disabled = originalDisabled;
+      addButton.innerHTML = originalText;
+      addButton.style.opacity = '1';
+    }
   }
 }
-
 
 
 // تحديث المنتج
 async function updateProduct(productId, updates) {
     try {
-        if (!currentUser || currentUser.role !== 'admin') {
+
+       // التحقق من الصلاحيات أولاً
+        const hasPermission = await checkAdminPermissions();
+        if (!hasPermission) {
             showMessage('ليس لديك صلاحية لتعديل المنتجات!', 'error');
             return;
         }
-        
+
         const { error } = await supabase
             .from('products')
             .update(updates)
@@ -661,7 +838,6 @@ async function updateProduct(productId, updates) {
         
         showMessage('تم تحديث المنتج بنجاح!', 'success');
     } catch (error) {
-        console.error('Error updating product:', error);
         showMessage('خطأ في تحديث المنتج: ' + error.message, 'error');
     }
 }
@@ -669,7 +845,10 @@ async function updateProduct(productId, updates) {
 // حذف المنتج
 async function deleteProduct(productId) {
     try {
-        if (!currentUser || currentUser.role !== 'admin') {
+
+        // التحقق من الصلاحيات أولاً
+        const hasPermission = await checkAdminPermissions();
+        if (!hasPermission) {
             showMessage('ليس لديك صلاحية لحذف المنتجات!', 'error');
             return;
         }
@@ -690,7 +869,6 @@ async function deleteProduct(productId) {
         
         showMessage('تم حذف المنتج بنجاح!', 'success');
     } catch (error) {
-        console.error('Error deleting product:', error);
         showMessage('خطأ في حذف المنتج: ' + error.message, 'error');
     }
 }
@@ -698,23 +876,50 @@ async function deleteProduct(productId) {
 // ترقية مستخدم إلى مدير
 async function promoteToAdmin(userId) {
     try {
-        if (!currentUser || currentUser.role !== 'admin') {
+        // التحقق من الصلاحيات أولاً
+        const hasPermission = await checkAdminPermissions();
+        if (!hasPermission) {
             showMessage('ليس لديك صلاحية لترقية المستخدمين!', 'error');
             return false;
         }
         
-        const { error } = await supabase
+        // التحقق من أن userId صالح
+        if (!userId) {
+            showMessage('معرف المستخدم غير صالح!', 'error');
+            return false;
+        }
+        
+        
+        const { data, error } = await supabase
             .from('profiles')
-            .update({ role: 'admin' })
-            .eq('id', userId);
+            .update({ 
+                role: 'admin',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+            .select(); // إضافة select للحصول على البيانات المحدثة
         
-        if (error) throw error;
+        if (error) {
+            throw error;
+        }
         
-        showMessage('تم ترقية المستخدم إلى مدير بنجاح!', 'success');
-        return true;
+        if (data && data.length > 0) {
+            showMessage('تم ترقية المستخدم إلى مدير بنجاح!', 'success');
+            return true;
+        } else {
+            showMessage('لم يتم العثور على المستخدم!', 'error');
+            return false;
+        }
     } catch (error) {
-        console.error('Error promoting user to admin:', error);
-        showMessage('خطأ في ترقية المستخدم: ' + error.message, 'error');
+        
+        // معالجة أنواع الأخطاء المختلفة
+        if (error.code === '42501') {
+            showMessage('ليس لديك صلاحية لتعديل بيانات المستخدمين!', 'error');
+        } else if (error.code === '406') {
+            showMessage('خطأ في تنسيق البيانات. يرجى التحقق من السياسات في Supabase.', 'error');
+        } else {
+            showMessage('خطأ في ترقية المستخدم: ' + (error.message || JSON.stringify(error)), 'error');
+        }
         return false;
     }
 }
@@ -769,7 +974,6 @@ async function checkout() {
         
         showMessage('تم إتمام الطلب بنجاح! رقم الطلب: ' + data[0].id, 'success');
     } catch (error) {
-        console.error('Error during checkout:', error);
         showMessage('خطأ في إتمام الطلب: ' + error.message, 'error');
     }
 }
@@ -780,7 +984,6 @@ async function checkout() {
 function renderProducts(filteredProducts = null) {
     const productsToRender = filteredProducts || products;
     if (!productsContainer) {
-        console.log('❌ productsContainer غير موجود');
         return;
     }
     
@@ -822,11 +1025,9 @@ function renderProducts(filteredProducts = null) {
 
 // إضافة إلى السلة
 function addToCart(productId) {
-    console.log('🛒 محاولة إضافة المنتج:', productId);
     
     const product = products.find(p => p.id === productId);
     if (!product) {
-        console.log('❌ المنتج غير موجود');
         return;
     }
     
@@ -840,7 +1041,6 @@ function addToCart(productId) {
     if (existingItem) {
         if (existingItem.quantity < product.quantity) {
             existingItem.quantity++;
-            console.log('✅ زيادة كمية المنتج الموجود');
         } else {
             showMessage('لا يوجد كمية كافية من هذا المنتج!', 'error');
             return;
@@ -853,7 +1053,6 @@ function addToCart(productId) {
             image: product.image,
             quantity: 1
         });
-        console.log('✅ إضافة منتج جديد إلى السلة');
     }
     
     updateCartCount();
@@ -863,7 +1062,6 @@ function addToCart(productId) {
         renderCartItems();
     }
     
-    console.log('🛒 السلة بعد الإضافة:', cart);
     showMessage('تمت إضافة المنتج إلى سلة المشتريات!', 'success');
 }
 
@@ -881,9 +1079,7 @@ function openCart() {
         cartOverlay.classList.add('active');
         renderCartItems();
     } else {
-        console.log('❌ خطأ: عناصر السلة غير موجودة');
-        console.log('cartSidebar:', cartSidebar);
-        console.log('cartOverlay:', cartOverlay);
+       
     }
 }
 
@@ -1033,95 +1229,109 @@ function switchAuthTab(authType) {
 }
 
 // تحديث واجهة المستخدم بناءً على حالة المصادقة
-function updateUI() {
+// تحديث واجهة المستخدم بناءً على حالة المصادقة
+async function updateUI() {
     const headerActions = document.querySelector('.header-actions');
     const navLoginBtn = document.querySelector('nav .login-btn');
     const navRegisterBtn = document.querySelector('nav .register-btn');
-    const footerLoginBtn = document.querySelector('footer .login-btn');
-    const footerRegisterBtn = document.querySelector('footer .register-btn');
     
-    if (currentUser) {
-        // إخفاء أزرار التسجيل...
-        
-        let adminButton = '';
-        if (currentUser.role === 'admin') {
-            adminButton = '<i class="fas fa-cog settings-icon" id="admin-btn"></i>';
-            if (dashboard) {
-                dashboard.classList.add('active');
-                renderDashboardProducts();
-                addUsersManagementTab();
+    try {
+        if (currentUser) {
+            // استخدام اسم آمن إذا كان full_name غير موجود
+            const safeUserName = currentUser.full_name || 
+                               currentUser.email?.split('@')[0] || 
+                               'مستخدم';
+            
+            let adminButton = '';
+            if (currentUser.role === 'admin') {
+                adminButton = '<i class="fas fa-cog settings-icon" id="admin-btn"></i>';
+                if (dashboard) {
+                    dashboard.classList.add('active');
+                    renderDashboardProducts();
+                    addUsersManagementTab();
+                }
+            } else {
+                if (dashboard) dashboard.classList.remove('active');
             }
-        } else {
-            if (dashboard) dashboard.classList.remove('active');
-        }
-        
-        // تحديث header-actions
-        if (headerActions) {
-            headerActions.innerHTML = `
-                <li class="cart-icon">
+            
+            // تحديث header-actions
+            if (headerActions) {
+                headerActions.innerHTML = `
+                    <li class="cart-icon">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count">${cart.reduce((total, item) => total + item.quantity, 0)}</span>
                 </li>
                 <li class="user-info"><i class="fas fa-sign-out-alt logout-icon" id="logout-btn-header"></i></li>
                 <li class="user-info">${adminButton}<span>مرحباً، ${currentUser.full_name}</span></li>
-            `;
-            
-            // ✅ إصلاح: تحديث المرجع بعد تغيير الـ DOM
-            cartIcon = headerActions.querySelector('.cart-icon');
-            cartCount = headerActions.querySelector('.cart-count');
-            
-            // إعادة ربط الأحداث للأزرار الجديدة
-            if (currentUser.role === 'admin') {
-                const adminBtn = document.getElementById('admin-btn');
-                if (adminBtn) {
-                    adminBtn.addEventListener('click', function() {
-                        if (dashboard) {
-                            dashboard.scrollIntoView({behavior: 'smooth'});
-                            renderDashboardProducts();
-                        }
+                `;
+                
+                // ✅ إصلاح: تحديث المرجع بعد تغيير الـ DOM
+                cartIcon = headerActions.querySelector('.cart-icon');
+                cartCount = headerActions.querySelector('.cart-count');
+                
+                // إعادة ربط الأحداث للأزرار الجديدة
+                if (currentUser.role === 'admin') {
+                    const adminBtn = document.getElementById('admin-btn');
+                    if (adminBtn) {
+                        adminBtn.addEventListener('click', function() {
+                            if (dashboard) {
+                                dashboard.scrollIntoView({behavior: 'smooth'});
+                                renderDashboardProducts();
+                            }
+                        });
+                    }
+                }
+                
+                const logoutBtnHeader = document.getElementById('logout-btn-header');
+                if (logoutBtnHeader) {
+                    logoutBtnHeader.addEventListener('click', async function() {
+                        await signOut();
                     });
                 }
             }
             
-            const logoutBtnHeader = document.getElementById('logout-btn-header');
-            if (logoutBtnHeader) {
-                logoutBtnHeader.addEventListener('click', async function() {
-                    await signOut();
-                });
+            // إخفاء أزرار التسجيل في القائمة
+            if (navLoginBtn) navLoginBtn.style.display = 'none';
+            if (navRegisterBtn) navRegisterBtn.style.display = 'none';
+            
+        } else {
+            // إظهار أزرار التسجيل...
+            if (navLoginBtn) navLoginBtn.style.display = 'inline';
+            if (navRegisterBtn) navRegisterBtn.style.display = 'inline';
+            
+            if (dashboard) dashboard.classList.remove('active');
+            
+            // إعادة تعيين header-actions
+            if (headerActions) {
+                headerActions.innerHTML = `
+                    <div class="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count">${cart.reduce((total, item) => total + item.quantity, 0)}</span>
+                    </div>
+                `;
+                
+                // ✅ إصلاح: تحديث المرجع بعد تغيير الـ DOM
+                cartIcon = headerActions.querySelector('.cart-icon');
+                cartCount = headerActions.querySelector('.cart-count');
             }
         }
-    } else {
-        // إظهار أزرار التسجيل...
         
-        if (dashboard) dashboard.classList.remove('active');
+        // ✅ إصلاح: إعادة ربط أحداث السلة بعد تحديث الواجهة
+        setTimeout(() => {
+            if (cartIcon) {
+                cartIcon.removeEventListener('click', openCart);
+                cartIcon.addEventListener('click', openCart);
+            }
+        }, 100);
         
-        // إعادة تعيين header-actions
-        if (headerActions) {
-            headerActions.innerHTML = `
-                <div class="cart-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count">${cart.reduce((total, item) => total + item.quantity, 0)}</span>
-                </div>
-            `;
-            
-            // ✅ إصلاح: تحديث المرجع بعد تغيير الـ DOM
-            cartIcon = headerActions.querySelector('.cart-icon');
-            cartCount = headerActions.querySelector('.cart-count');
-        }
+    } catch (error) {
     }
-    
-    // ✅ إصلاح: إعادة ربط أحداث السلة بعد تحديث الواجهة
-    setTimeout(() => {
-        if (cartIcon) {
-            cartIcon.removeEventListener('click', openCart);
-            cartIcon.addEventListener('click', openCart);
-        }
-    }, 100);
 }
 
 // إضافة تبويب إدارة المستخدمين في لوحة التحكم (للمدير فقط)
-function addUsersManagementTab() {
-    if (currentUser.role !== 'admin') return;
+async function addUsersManagementTab() {
+     const hasPermission = await checkAdminPermissions(); // الآن صحيح
+    if (!hasPermission) return;
     
     // التحقق إذا كان التبويب موجود بالفعل
     if (document.getElementById('users-tab')) return;
@@ -1156,11 +1366,6 @@ function addUsersManagementTab() {
         usersTabContent.id = 'users-tab';
         usersTabContent.innerHTML = `
             <h3>إدارة المستخدمين</h3>
-            <div class="form-group">
-                <label for="promote-email">ترقية مستخدم إلى مدير:</label>
-                <input type="email" id="promote-email" placeholder="البريد الإلكتروني للمستخدم">
-                <button id="promote-btn" class="submit-btn">ترقية إلى مدير</button>
-            </div>
             <div id="users-list">
                 <div class="loading">جاري تحميل المستخدمين...</div>
             </div>
@@ -1179,6 +1384,13 @@ function addUsersManagementTab() {
 async function promoteUserByEmail() {
     const emailInput = document.getElementById('promote-email');
     if (!emailInput) return;
+
+    // التحقق من الصلاحيات أولاً
+    const hasPermission = await checkAdminPermissions();
+    if (!hasPermission) {
+        showMessage('ليس لديك صلاحية لترقية المستخدمين!', 'error');
+        return;
+    }
     
     const email = emailInput.value.trim();
     if (!email) {
@@ -1187,15 +1399,28 @@ async function promoteUserByEmail() {
     }
     
     try {
+        
         // البحث عن المستخدم بالبريد الإلكتروني
         const { data: userData, error: userError } = await supabase
             .from('profiles')
-            .select('id')
+            .select('id, email, role')
             .eq('email', email)
-            .single();
+            .maybeSingle(); // استخدام maybeSingle بدلاً من single
         
         if (userError) {
-            showMessage('لم يتم العثور على المستخدم!', 'error');
+            showMessage('خطأ في البحث عن المستخدم: ' + userError.message, 'error');
+            return;
+        }
+        
+        if (!userData) {
+            showMessage('لم يتم العثور على مستخدم بهذا البريد الإلكتروني!', 'error');
+            return;
+        }
+        
+        
+        // التحقق إذا كان المستخدم مدير بالفعل
+        if (userData.role === 'admin') {
+            showMessage('هذا المستخدم مدير بالفعل!', 'info');
             return;
         }
         
@@ -1206,17 +1431,16 @@ async function promoteUserByEmail() {
             loadUsers(); // إعادة تحميل قائمة المستخدمين
         }
     } catch (error) {
-        console.error('Error promoting user:', error);
-        showMessage('خطأ في ترقية المستخدم', 'error');
+        showMessage('خطأ في ترقية المستخدم: ' + error.message, 'error');
     }
 }
 
+
 // عرض المستخدمين
+// تحسين دالة renderUsers
 function renderUsers(users) {
     const usersList = document.getElementById('users-list');
     if (!usersList) return;
-    
-    usersList.innerHTML = '';
     
     if (users.length === 0) {
         usersList.innerHTML = '<div class="message">لا توجد مستخدمين</div>';
@@ -1240,12 +1464,18 @@ function renderUsers(users) {
                 <tr>
                     <td>${user.full_name || 'غير محدد'}</td>
                     <td>${user.email || 'غير محدد'}</td>
-                    <td>${user.role}</td>
+                    <td>
+                        <span class="role-badge ${user.role === 'admin' ? 'admin-badge' : 'user-badge'}">
+                            ${user.role === 'admin' ? 'مدير' : 'عميل'}
+                        </span>
+                    </td>
                     <td>${new Date(user.created_at).toLocaleDateString('ar-EG')}</td>
                     <td>
                         ${user.role !== 'admin' ? 
-                            `<button class="action-btn edit-btn" onclick="promoteUser('${user.id}')">ترقية إلى مدير</button>` : 
-                            '<span style="color: green;">مدير</span>'
+                            `<button class="action-btn promote-btn" onclick="promoteUser('${user.id}')">
+                                <i class="fas fa-user-shield"></i> ترقية إلى مدير
+                            </button>` : 
+                            '<span class="admin-text"><i class="fas fa-crown"></i> مدير</span>'
                         }
                     </td>
                 </tr>
@@ -1253,6 +1483,7 @@ function renderUsers(users) {
         </tbody>
     `;
     
+    usersList.innerHTML = '';
     usersList.appendChild(table);
 }
 
@@ -1377,28 +1608,58 @@ function filterProducts() {
 }
 
 // عرض الرسائل
+// عرض الرسائل
 function showMessage(message, type) {
     // إزالة أي رسائل سابقة
     const existingMessages = document.querySelectorAll('.message');
-    existingMessages.forEach(msg => msg.remove());
+    existingMessages.forEach(msg => {
+        msg.style.opacity = '0';
+        setTimeout(() => msg.remove(), 300);
+    });
     
     // إنشاء رسالة جديدة
     const messageEl = document.createElement('div');
     messageEl.className = `message ${type}`;
-    messageEl.textContent = message;
+    messageEl.innerHTML = `
+        <div class="message-content">
+            <i class="fas ${getMessageIcon(type)}"></i>
+            <span>${message}</span>
+        </div>
+    `;
     
     // إضافة الرسالة في أعلى الصفحة
     document.body.insertBefore(messageEl, document.body.firstChild);
     
+    // إضافة أنيميشن للظهور
+    setTimeout(() => {
+        messageEl.style.opacity = '1';
+        messageEl.style.transform = 'translateY(0)';
+    }, 10);
+    
     // إزالة الرسالة بعد 5 ثواني
     setTimeout(() => {
         if (messageEl.parentNode) {
-            messageEl.remove();
+            messageEl.style.opacity = '0';
+            messageEl.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                if (messageEl.parentNode) messageEl.remove();
+            }, 300);
         }
     }, 5000);
+    
 }
 
-// تصدير الدوال للاستخدام في console (للت debugging)
+// دالة مساعدة للحصول على الأيقونة المناسبة
+function getMessageIcon(type) {
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        info: 'fa-info-circle',
+        warning: 'fa-exclamation-triangle'
+    };
+    return icons[type] || 'fa-info-circle';
+}
+
 window.sajaStore = {
     currentUser,
     products,
