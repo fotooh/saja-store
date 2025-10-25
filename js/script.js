@@ -795,14 +795,14 @@ async function addProduct() {
 
     } catch (error) {
         showMessage('❌ خطأ في إضافة المنتج: ' + (error.message || JSON.stringify(error)), 'error');
-    } finally {
-        // 🔹 إصلاح: استخدام المتغيرات المعرفة بشكل صحيح
-        if (addButton) {
-            addButton.disabled = originalDisabled; // ✅ الآن المتغير معرف
-            addButton.innerHTML = originalText;
-            addButton.style.opacity = '1';
-        }
+   } finally {
+    // 🔹 بديل مبسط وآمن
+    if (addButton) {
+        addButton.disabled = false;
+        addButton.innerHTML = '<i class="fas fa-plus-circle"></i> إضافة المنتج';
+        addButton.style.opacity = '1';
     }
+}
 }
 
 
