@@ -645,167 +645,164 @@ async function signOut() {
 }
 
 async function addProduct() {
-
     // التحقق من الصلاحيات أولاً
     const hasPermission = await checkAdminPermissions();
     if (!hasPermission) {
         showMessage('ليس لديك صلاحية لإضافة منتجات!', 'error');
         return;
     }
-  // جلب الزر من خلال الـ class أو ID
-  const addButton = document.querySelector('.submit-btn') || 
+
+    // 🔹 إصلاح: تعريف المتغيرات بشكل صحيح
+    let addButton = document.querySelector('.submit-btn') || 
                    document.querySelector('#add-product-form button[type="submit"]');
-  
-  // إذا لم نجد الزر، استخدم الزر الافتراضي في النموذج
-  const form = document.getElementById('add-product-form');
-  if (!addButton && form) {
-    addButton = form.querySelector('button[type="submit"]');
-  }
-
-  try {
-    // 🔹 حفظ النص الأصلي للزر
-    const originalText = addButton ? addButton.innerHTML : 'إضافة المنتج';
-    const originalDisabled = addButton ? addButton.disabled : false;
-
-    // 🔹 إظهار حالة التحميل على الزر
-    if (addButton) {
-      addButton.disabled = true;
-      addButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...`;
-      addButton.style.opacity = '0.7';
-    }
-
-    // التحقق من الصلاحيات
-    if (!currentUser || currentUser.role !== 'admin') {
-      showMessage('ليس لديك صلاحية لإضافة منتجات!', 'error');
-      return;
-    }
-
-    // قراءة القيم من الحقول
-    const name = document.getElementById('product-name')?.value.trim();
-    const priceValue = document.getElementById('product-price')?.value.trim();
-    const quantityValue = document.getElementById('product-quantity')?.value.trim();
-    const category = document.getElementById('product-category')?.value.trim();
-    const size = document.getElementById('product-size')?.value.trim();
-    const color = document.getElementById('product-color')?.value.trim();
-    const description = document.getElementById('product-description')?.value.trim();
-
-    // التحقق من المدخلات
-    if (!name) {
-      showMessage('الرجاء إدخال اسم المنتج!', 'error');
-      return;
-    }
-    if (!priceValue || isNaN(parseInt(priceValue))) {
-      showMessage('الرجاء إدخال سعر صحيح!', 'error');
-      return;
-    }
-    if (!quantityValue || isNaN(parseInt(quantityValue))) {
-      showMessage('الرجاء إدخال كمية صحيحة!', 'error');
-      return;
-    }
-
-    const price = parseInt(priceValue);
-    const quantity = parseInt(quantityValue);
-
-    // 🔹 إظهار رسالة بدء الرفع
-    showMessage('جاري رفع الصورة وإضافة المنتج...', 'info');
-
-    // رفع الصورة
-    let imageUrl = null;
-    const fileInput = document.getElementById('product-image');
     
-    if (fileInput && fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      const cleanFileName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
-
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(`products/${cleanFileName}`, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        throw new Error('فشل في رفع الصورة: ' + uploadError.message);
-      }
-
-      // الحصول على رابط الصورة
-      const { data: urlData } = supabase.storage
-        .from('images')
-        .getPublicUrl(`products/${cleanFileName}`);
-      
-      imageUrl = urlData.publicUrl;
+    // إذا لم نجد الزر، استخدم الزر الافتراضي في النموذج
+    const form = document.getElementById('add-product-form');
+    if (!addButton && form) {
+        addButton = form.querySelector('button[type="submit"]');
     }
 
-    // تجهيز بيانات المنتج
-    const productData = {
-      name,
-      price,
-      quantity,
-      category: category || null,
-      size: size || null,
-      color: color || null,
-      description: description || null,
-      image: imageUrl,
-      user_id: currentUser.id
-    };
+    try {
+        // 🔹 إصلاح: تعريف المتغيرات بشكل صحيح
+        const originalText = addButton ? addButton.innerHTML : 'إضافة المنتج';
+        const originalDisabled = addButton ? addButton.disabled : false; // ✅ تم تعريفه الآن
 
+        // 🔹 إظهار حالة التحميل على الزر
+        if (addButton) {
+            addButton.disabled = true;
+            addButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...`;
+            addButton.style.opacity = '0.7';
+        }
 
-    // 🔹 إظهار رسالة إضافة المنتج
-    showMessage('جاري إضافة المنتج إلى قاعدة البيانات...', 'info');
+        // التحقق من الصلاحيات
+        if (!currentUser || currentUser.role !== 'admin') {
+            showMessage('ليس لديك صلاحية لإضافة منتجات!', 'error');
+            return;
+        }
 
-    // إضافة المنتج
-    const { data, error } = await supabase
-      .from('products')
-      .insert([productData])
-      .select();
+        // قراءة القيم من الحقول
+        const name = document.getElementById('product-name')?.value.trim();
+        const priceValue = document.getElementById('product-price')?.value.trim();
+        const quantityValue = document.getElementById('product-quantity')?.value.trim();
+        const category = document.getElementById('product-category')?.value.trim();
+        const size = document.getElementById('product-size')?.value.trim();
+        const color = document.getElementById('product-color')?.value.trim();
+        const description = document.getElementById('product-description')?.value.trim();
 
-    if (error) {
-      throw error;
+        // التحقق من المدخلات
+        if (!name) {
+            showMessage('الرجاء إدخال اسم المنتج!', 'error');
+            return;
+        }
+        if (!priceValue || isNaN(parseInt(priceValue))) {
+            showMessage('الرجاء إدخال سعر صحيح!', 'error');
+            return;
+        }
+        if (!quantityValue || isNaN(parseInt(quantityValue))) {
+            showMessage('الرجاء إدخال كمية صحيحة!', 'error');
+            return;
+        }
+
+        const price = parseInt(priceValue);
+        const quantity = parseInt(quantityValue);
+
+        // 🔹 إظهار رسالة بدء الرفع
+        showMessage('جاري رفع الصورة وإضافة المنتج...', 'info');
+
+        // رفع الصورة
+        let imageUrl = null;
+        const fileInput = document.getElementById('product-image');
+        
+        if (fileInput && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const cleanFileName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('images')
+                .upload(`products/${cleanFileName}`, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (uploadError) {
+                throw new Error('فشل في رفع الصورة: ' + uploadError.message);
+            }
+
+            // الحصول على رابط الصورة
+            const { data: urlData } = supabase.storage
+                .from('images')
+                .getPublicUrl(`products/${cleanFileName}`);
+            
+            imageUrl = urlData.publicUrl;
+        }
+
+        // تجهيز بيانات المنتج
+        const productData = {
+            name,
+            price,
+            quantity,
+            category: category || null,
+            size: size || null,
+            color: color || null,
+            description: description || null,
+            image: imageUrl,
+            user_id: currentUser.id
+        };
+
+        // 🔹 إظهار رسالة إضافة المنتج
+        showMessage('جاري إضافة المنتج إلى قاعدة البيانات...', 'info');
+
+        // إضافة المنتج
+        const { data, error } = await supabase
+            .from('products')
+            .insert([productData])
+            .select();
+
+        if (error) {
+            throw error;
+        }
+
+        // تحديث القائمة
+        if (data && data[0]) {
+            products.unshift(data[0]);
+            renderProducts();
+            renderDashboardProducts();
+        }
+
+        // إعادة تعيين النموذج
+        if (addProductForm) {
+            addProductForm.reset();
+            // إعادة تعيين معاينة الصورة
+            const imagePreview = document.getElementById('image-preview');
+            if (imagePreview) {
+                imagePreview.style.display = 'none';
+                imagePreview.src = '#';
+            }
+            const removeImageBtn = document.getElementById('remove-image');
+            if (removeImageBtn) removeImageBtn.style.display = 'none';
+            const imageUploadBox = document.getElementById('image-upload-box');
+            if (imageUploadBox) imageUploadBox.classList.remove('has-image');
+        }
+
+        // 🔹 إظهار رسالة النجاح
+        showMessage('تم إضافة المنتج بنجاح!', 'success');
+
+        // 🔹 التبديل تلقائياً إلى تبويب المنتجات لمشاهدة المنتج المضاف
+        const productsTabBtn = document.querySelector('.tab-btn[data-tab="products-tab"]');
+        if (productsTabBtn) {
+            productsTabBtn.click();
+        }
+
+    } catch (error) {
+        showMessage('❌ خطأ في إضافة المنتج: ' + (error.message || JSON.stringify(error)), 'error');
+    } finally {
+        // 🔹 إصلاح: استخدام المتغيرات المعرفة بشكل صحيح
+        if (addButton) {
+            addButton.disabled = originalDisabled; // ✅ الآن المتغير معرف
+            addButton.innerHTML = originalText;
+            addButton.style.opacity = '1';
+        }
     }
-
-
-    // تحديث القائمة
-    if (data && data[0]) {
-      products.unshift(data[0]);
-      renderProducts();
-      renderDashboardProducts();
-    }
-
-    // إعادة تعيين النموذج
-    if (addProductForm) {
-      addProductForm.reset();
-      // إعادة تعيين معاينة الصورة
-      const imagePreview = document.getElementById('image-preview');
-      if (imagePreview) {
-        imagePreview.style.display = 'none';
-        imagePreview.src = '#';
-      }
-      const removeImageBtn = document.getElementById('remove-image');
-      if (removeImageBtn) removeImageBtn.style.display = 'none';
-      const imageUploadBox = document.getElementById('image-upload-box');
-      if (imageUploadBox) imageUploadBox.classList.remove('has-image');
-    }
-
-    // 🔹 إظهار رسالة النجاح
-    showMessage('تم إضافة المنتج بنجاح!', 'success');
-
-    // 🔹 التبديل تلقائياً إلى تبويب المنتجات لمشاهدة المنتج المضاف
-    const productsTabBtn = document.querySelector('.tab-btn[data-tab="products-tab"]');
-    if (productsTabBtn) {
-      productsTabBtn.click();
-    }
-
-  } catch (error) {
-    showMessage('❌ خطأ في إضافة المنتج: ' + (error.message || JSON.stringify(error)), 'error');
-  } finally {
-    // 🔹 إعادة الزر إلى حالته الأصلية
-    if (addButton) {
-      addButton.disabled = originalDisabled;
-      addButton.innerHTML = originalText;
-      addButton.style.opacity = '1';
-    }
-  }
 }
 
 

@@ -1,7 +1,6 @@
 import { supabase } from "./supabase.js";
 
 // دالة تهيئة السلايدر
-// دالة تهيئة السلايدر
 function initSlider(reset = false) {
     const sliderTrack = document.getElementById('slider-track');
     const slides = document.querySelectorAll('.slide');
@@ -470,7 +469,6 @@ function displayOffers(offers) {
 }
 
 // عرض العروض في السلايدر
-// عرض العروض في السلايدر
 function displayOffersSlider(offers) {
     const sliderTrack = document.getElementById('slider-track');
     if (!sliderTrack) {
@@ -637,7 +635,7 @@ async function editOffer(offerId) {
             .single();
 
         if (error) {
-            console.error('❌ خطأ في تحميل بيانات العرض:', error);
+            console.error('خطأ في تحميل بيانات العرض:', error);
             throw error;
         }
 
