@@ -1,7 +1,8 @@
 import { supabase } from "./supabase.js";
 
 // دالة تهيئة السلايدر
-function initSlider() {
+// دالة تهيئة السلايدر
+function initSlider(reset = false) {
     const sliderTrack = document.getElementById('slider-track');
     const slides = document.querySelectorAll('.slide');
     const prevBtn = document.getElementById('prev-slide');
@@ -10,34 +11,47 @@ function initSlider() {
     
     if (!sliderTrack || !slides.length) return;
     
-    let currentSlide = 0;
-    const totalSlides = slides.length;
-    
-    // مسح النقاط القديمة
-    if (sliderDots) {
-        sliderDots.innerHTML = '';
+    // إذا طلبنا إعادة التعيين، نمسح أي متغيرات موجودة
+    if (reset || !window.sliderState) {
+        window.sliderState = {
+            currentSlide: 0,
+            totalSlides: slides.length,
+            slideInterval: null
+        };
+    } else {
+        // تحديث عدد الشرائح فقط
+        window.sliderState.totalSlides = slides.length;
     }
     
-    // إنشاء نقاط السلايدر
-    slides.forEach((_, index) => {
-        if (sliderDots) {
+    let { currentSlide, totalSlides } = window.sliderState;
+    
+    // مسح النقاط القديمة وإنشاء جديدة
+    if (sliderDots) {
+        sliderDots.innerHTML = '';
+        
+        slides.forEach((_, index) => {
             const dot = document.createElement('button');
             dot.classList.add('slider-dot');
-            if (index === 0) dot.classList.add('active');
+            if (index === currentSlide) dot.classList.add('active');
             dot.addEventListener('click', () => goToSlide(index));
             sliderDots.appendChild(dot);
-        }
-    });
+        });
+    }
     
     const dots = document.querySelectorAll('.slider-dot');
     
     function updateSlider() {
-        sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+        if (sliderTrack) {
+            sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
         
         // تحديث النقاط النشطة
         dots.forEach((dot, index) => {
             dot.classList.toggle('active', index === currentSlide);
         });
+        
+        // تحديث الحالة
+        window.sliderState.currentSlide = currentSlide;
     }
     
     function nextSlide() {
@@ -64,30 +78,44 @@ function initSlider() {
         prevBtn.onclick = prevSlide;
     }
     
-    // التشغيل التلقائي
-    let slideInterval = setInterval(nextSlide, 5000);
+    // إيقاف التشغيل التلقائي القديم إذا كان موجوداً
+    if (window.sliderState.slideInterval) {
+        clearInterval(window.sliderState.slideInterval);
+    }
+    
+    // التشغيل التلقائي الجديد
+    window.sliderState.slideInterval = setInterval(nextSlide, 5000);
     
     // إيقاف التشغيل التلقائي عند التمرير
-    sliderTrack.addEventListener('mouseenter', () => {
-        clearInterval(slideInterval);
-    });
-    
-    sliderTrack.addEventListener('mouseleave', () => {
-        slideInterval = setInterval(nextSlide, 5000);
-    });
+    if (sliderTrack) {
+        sliderTrack.addEventListener('mouseenter', () => {
+            if (window.sliderState.slideInterval) {
+                clearInterval(window.sliderState.slideInterval);
+            }
+        });
+        
+        sliderTrack.addEventListener('mouseleave', () => {
+            if (window.sliderState.slideInterval) {
+                clearInterval(window.sliderState.slideInterval);
+            }
+            window.sliderState.slideInterval = setInterval(nextSlide, 5000);
+        });
+    }
     
     // دعم السحب على الأجهزة المحمولة
     let startX = 0;
     let endX = 0;
     
-    sliderTrack.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-    });
-    
-    sliderTrack.addEventListener('touchend', (e) => {
-        endX = e.changedTouches[0].clientX;
-        handleSwipe();
-    });
+    if (sliderTrack) {
+        sliderTrack.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+        });
+        
+        sliderTrack.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].clientX;
+            handleSwipe();
+        });
+    }
     
     function handleSwipe() {
         const diff = startX - endX;
@@ -353,7 +381,7 @@ async function handleOfferFormSubmit(e) {
 // تحميل العروض من Supabase
 async function loadOffers() {
     try {
-        console.log('🔄 جاري تحميل العروض...');
+        console.log('🔄 جاري تحميل العرواز...');
         const { data: offers, error } = await supabase
             .from('offers')
             .select('*')
@@ -369,7 +397,7 @@ async function loadOffers() {
         // عرض العروض في لوحة التحكم
         displayOffers(offers || []);
         
-        // عرض العروض في السلايدر الرئيسي
+        // عرض العروض في السلايدر الرئيسي مع إعادة التعيين
         displayOffersSlider(offers || []);
         
     } catch (error) {
@@ -442,6 +470,7 @@ function displayOffers(offers) {
 }
 
 // عرض العروض في السلايدر
+// عرض العروض في السلايدر
 function displayOffersSlider(offers) {
     const sliderTrack = document.getElementById('slider-track');
     if (!sliderTrack) {
@@ -464,7 +493,10 @@ function displayOffersSlider(offers) {
                 </div>
             </div>
         `;
-        initSlider();
+        // إعادة تهيئة السلايدر بعد التحديث
+        setTimeout(() => {
+            initSlider(true); // تمرير true لإعادة التعيين الكامل
+        }, 100);
         return;
     }
 
@@ -485,9 +517,9 @@ function displayOffersSlider(offers) {
         </div>
     `).join('');
 
-    // إعادة تهيئة السلايدر
+    // إعادة تهيئة السلايدر بعد التحديث
     setTimeout(() => {
-        initSlider();
+        initSlider(true); // تمرير true لإعادة التعيين الكامل
     }, 100);
 }
 
