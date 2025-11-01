@@ -317,78 +317,147 @@
             </div>
             
             <div class="tab-content" id="add-product-tab">
-                <form id="add-product-form">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="product-name">اسم المنتج</label>
-                            <input type="text" id="product-name" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="product-price">السعر (ريال يمني)</label>
-                            <input type="number" id="product-price" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="product-quantity">الكمية</label>
-                            <input type="number" id="product-quantity" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="product-category">الفئة</label>
-                            <select id="product-category" required>
-                                <option value="رجالي">رجالي</option>
-                                <option value="نسائي">نسائي</option>
-                                <option value="أطفال">أطفال</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="product-size">المقاس</label>
-                            <select id="product-size" required>
-                                <option value="S">S</option>
-                                <option value="M">M</option>
-                                <option value="L">L</option>
-                                <option value="XL">XL</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="product-color">اللون</label>
-                            <select id="product-color" required>
-                                <option value="أحمر">أحمر</option>
-                                <option value="أزرق">أزرق</option>
-                                <option value="أخضر">أخضر</option>
-                                <option value="أسود">أسود</option>
-                                <option value="أبيض">أبيض</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="product-description">الوصف</label>
-                        <textarea id="product-description" required></textarea>
-                    </div>
-                    
-                   <div class="image-upload-container">
-                        <label class="image-upload-label">صورة المنتج</label>
-                        <div class="image-upload-box" id="image-upload-box">
-                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                            <p class="upload-text">انقر لرفع صورة أو اسحبها هنا</p>
-                            <div class="upload-btn">اختر صورة</div>
-                            <input type="file" id="product-image" accept="image/*">
-                        </div>
-                        <div class="image-preview-container">
-                            <img id="image-preview" src="#" alt="معاينة الصورة">
-                            <button type="button" class="remove-image" id="remove-image">إزالة الصورة</button>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="submit-btn">
-                        <i class="fas fa-plus-circle"></i> إضافة المنتج
-                    </button>
-                </form>
+    <form id="add-product-form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="product-name">اسم المنتج *</label>
+                <input type="text" id="product-name" required>
             </div>
+            
+            <div class="form-group">
+                <label for="product-price">السعر *</label>
+                <div class="price-input-container">
+                    <input type="number" id="product-price" required step="0.01">
+                    <select id="product-currency" class="currency-select">
+                        <option value="YER">ريال يمني قديم</option>
+                        <option value="SAR">ريال سعودي</option>
+                        <option value="USD">دولار أمريكي</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="product-quantity">الكمية *</label>
+                <input type="number" id="product-quantity" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="product-category">الفئة الرئيسية *</label>
+                <select id="product-category" required>
+                    <option value="">اختر الفئة</option>
+                    <option value="رجالي">رجالي</option>
+                    <option value="نسائي">نسائي</option>
+                    <option value="أطفال">أطفال</option>
+                    <option value="رضع">رضع</option>
+                    <option value="كبار السن">كبار السن</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="product-type">نوع الملابس *</label>
+                <select id="product-type" required>
+                    <option value="">اختر النوع</option>
+                    <option value="شتوية">شتوية</option>
+                    <option value="صيفية">صيفية</option>
+                    <option value="حفلات">حفلات</option>
+                    <option value="رياضية">رياضية</option>
+                    <option value="عمل">عمل</option>
+                    <option value="منزلية">منزلية</option>
+                    <option value="سباحة">سباحة</option>
+                    <option value="تقليدية">تقليدية</option>
+                    <option value="عصرية">عصرية</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="product-size">المقاس *</label>
+                <select id="product-size" required>
+                    <option value="">اختر المقاس</option>
+                    <option value="XS">XS</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="2XL">2XL</option>
+                    <option value="3XL">3XL</option>
+                    <option value="4XL">4XL</option>
+                    <option value="مقاسات أطفال">مقاسات أطفال</option>
+                    <option value="مقاس رضيع">مقاس رضيع</option>
+                    <option value="مقاس حر">مقاس حر</option>
+                </select>
+            </div>
+            
+          <div class="form-group">
+    <label for="product-color">اللون *</label>
+    <div class="color-selection-container">
+        <div class="color-input-wrapper">
+            <input type="text" id="product-color" placeholder="اختر اللون" readonly required>
+            <button type="button" class="color-picker-btn" id="color-picker-btn">
+                <i class="fas fa-palette"></i> اختر لون
+            </button>
+        </div>
+        <div class="color-preview" id="color-preview">
+            <span class="color-preview-text">لم يتم اختيار لون</span>
+        </div>
+        <input type="color" id="color-picker" class="color-picker-hidden">
+    </div>
+    <div class="color-suggestions">
+        <span class="suggestion-label">ألوان سريعة:</span>
+        <div class="color-options">
+            <div class="color-option" data-color="#ff0000" data-name="أحمر" style="background-color: #ff0000;" title="أحمر"></div>
+            <div class="color-option" data-color="#0000ff" data-name="أزرق" style="background-color: #0000ff;" title="أزرق"></div>
+            <div class="color-option" data-color="#008000" data-name="أخضر" style="background-color: #008000;" title="أخضر"></div>
+            <div class="color-option" data-color="#000000" data-name="أسود" style="background-color: #000000;" title="أسود"></div>
+            <div class="color-option" data-color="#ffffff" data-name="أبيض" style="background-color: #ffffff; border: 2px solid #ddd;" title="أبيض"></div>
+            <div class="color-option" data-color="#808080" data-name="رمادي" style="background-color: #808080;" title="رمادي"></div>
+            <div class="color-option" data-color="#a52a2a" data-name="بني" style="background-color: #a52a2a;" title="بني"></div>
+            <div class="color-option" data-color="#ffc0cb" data-name="زهري" style="background-color: #ffc0cb;" title="زهري"></div>
+            <div class="color-option" data-color="#800080" data-name="بنفسجي" style="background-color: #800080;" title="بنفسجي"></div>
+            <div class="color-option" data-color="#ffa500" data-name="برتقالي" style="background-color: #ffa500;" title="برتقالي"></div>
+            <div class="color-option" data-color="#ffff00" data-name="أصفر" style="background-color: #ffff00;" title="أصفر"></div>
+            <div class="color-option" data-color="#ffd700" data-name="ذهبي" style="background-color: #ffd700;" title="ذهبي"></div>
+        </div>
+        <button type="button" class="color-reset-btn" id="color-reset-btn">
+            <i class="fas fa-undo"></i> إعادة تعيين
+        </button>
+    </div>
+</div>
+        </div>
+        
+        <div class="form-group">
+    <label for="product-description">الوصف التفصيلي *</label>
+    <textarea id="product-description" required placeholder="وصف كامل للمنتج، المواد المستخدمة، العناية..." rows="4"></textarea>
+    <div class="description-counter">
+        <span id="description-counter">0</span> / 500 حرف
+    </div>
+</div>
+
+<!-- رفع متعدد للصور -->
+<div class="image-upload-container">
+    <label class="image-upload-label">صور المنتج (يمكن رفع عدة صور) *</label>
+    <div class="image-upload-box" id="image-upload-box">
+        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+        <p class="upload-text">انقر لرفع صور المنتج أو اسحبها هنا</p>
+        <p class="upload-hint">يمكنك رفع حتى 5 صور - الصيغ المدعومة: JPG, PNG, WebP</p>
+        <div class="upload-btn">اختر الصور</div>
+        <input type="file" id="product-images" accept="image/jpeg, image/png, image/webp" multiple hidden>
+    </div>
+    <div class="upload-status" id="upload-status">
+        <div class="upload-progress" id="upload-progress">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <span class="upload-count" id="upload-count">0/5 صور مختارة</span>
+    </div>
+    <div class="images-preview-container" id="images-preview-container">
+        <!-- معاينة الصور ستظهر هنا -->
+    </div>
+</div>
+        
+        <button type="submit" class="submit-btn">
+            <i class="fas fa-plus-circle"></i> إضافة المنتج
+        </button>
+    </form>
+</div>
         </div>
     </section>
 
@@ -448,76 +517,6 @@
     <script type="module" src="js/supabase.js"></script>
     <script type="module" src="js/script.js"></script>
     <script type="module" src="js/offers.js"></script>
-    <script>
-        
-        // معالجة رفع الصور
-        const imageInput = document.getElementById('product-image');
-        const imageUploadBox = document.getElementById('image-upload-box');
-        const imagePreview = document.getElementById('image-preview');
-        const removeImageBtn = document.getElementById('remove-image');
-        
-        // فتح نافذة اختيار الملف عند النقر على منطقة الرفع
-        imageUploadBox.addEventListener('click', () => {
-            imageInput.click();
-        });
-        
-        // معالجة اختيار الملف
-        imageInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                    imageUploadBox.classList.add('has-image');
-                    removeImageBtn.style.display = 'inline-block';
-                }
-                
-                reader.readAsDataURL(this.files[0]);
-            }
-        });
-        
-        // إزالة الصورة المختارة
-        removeImageBtn.addEventListener('click', function() {
-            imageInput.value = '';
-            imagePreview.style.display = 'none';
-            imageUploadBox.classList.remove('has-image');
-            this.style.display = 'none';
-        });
-        
-        // دعم السحب والإفلات
-        imageUploadBox.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.style.borderColor = 'rgb(194, 69, 216)';
-            this.style.backgroundColor = 'rgba(194, 69, 216, 0.1)';
-        });
-        
-        imageUploadBox.addEventListener('dragleave', function() {
-            this.style.borderColor = '#ddd';
-            this.style.backgroundColor = '#fafafa';
-        });
-        
-        imageUploadBox.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.style.borderColor = '#ddd';
-            this.style.backgroundColor = '#fafafa';
-            
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                imageInput.files = e.dataTransfer.files;
-                const event = new Event('change');
-                imageInput.dispatchEvent(event);
-            }
-        });
-
-        
-
-        // زر تسجيل الخروج
-        document.getElementById('logout-btn').addEventListener('click', function() {
-            if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-                  signOut();
-                alert('تم تسجيل الخروج بنجاح');
-            }
-        });
-    </script>
+    
 </body>
 </html>
