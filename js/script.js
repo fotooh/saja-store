@@ -73,6 +73,10 @@ function initializeDOMElements() {
     productDetailModal = document.getElementById('product-detail-modal');
     productDetailContainer = document.getElementById('product-detail-container');
     closeDetail = document.querySelector('.close-detail');
+
+     setTimeout(() => {
+        initializeEnhancedSearch();
+    }, 1000);
 }
 
 // ✅ إضافة event delegation عالمي
@@ -291,6 +295,12 @@ function setupEventListeners() {
     
     // ربط الأحداث الأولية
     bindCartEvents();
+
+    setTimeout(() => {
+        if (typeof initializeEnhancedSearch === 'function') {
+            initializeEnhancedSearch();
+        }
+    }, 1000);
 }
 
 // وظائف Supabase
@@ -956,17 +966,24 @@ async function checkout() {
     }
 }
 
-// وظائف واجهة المستخدم
 
 // ✅ تحديث دالة renderProducts لتكون آمنة
 function renderProducts(filteredProducts = null) {
     const productsToRender = filteredProducts || products;
+    const productsContainer = document.getElementById('products-container');
+    
     if (!productsContainer) return;
     
     productsContainer.innerHTML = '';
     
     if (productsToRender.length === 0) {
-        productsContainer.innerHTML = '<div class="message">لا توجد منتجات لعرضها</div>';
+        productsContainer.innerHTML = `
+            <div class="no-results">
+                <i class="fas fa-search"></i>
+                <h3>لم نعثر على منتجات</h3>
+                <p>جرب تعديل كلمات البحث أو الفلاتر للحصول على نتائج أفضل</p>
+            </div>
+        `;
         return;
     }
     
@@ -1261,15 +1278,17 @@ async function updateUI() {
             // ✅ تحديث header-actions بشكل آمن
             if (headerActions) {
                 headerActions.innerHTML = `
-                    <div class="cart-icon">
+                    <li class="cart-icon">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count">${cart.reduce((total, item) => total + item.quantity, 0)}</span>
-                    </div>
-                    <div class="user-info">
+                    </li>
+                    <li class="user-info">
                         <i class="fas fa-sign-out-alt logout-icon" id="logout-btn-header"></i>
+                    </li>
+                    <li class="user-info">
                         ${adminButton}
                         <span>مرحباً، ${safeUserName}</span>
-                    </div>
+                    </li>
                 `;
                 
                 // ✅ ربط الأحداث بعد تحديث DOM
@@ -1564,33 +1583,7 @@ function editProduct(productId) {
 
 // تصفية المنتجات
 function filterProducts() {
-    const category = categoryFilter ? categoryFilter.value : '';
-    const size = sizeFilter ? sizeFilter.value : '';
-    const color = colorFilter ? colorFilter.value : '';
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    
-    let filtered = products;
-    
-    if (category) {
-        filtered = filtered.filter(product => product.category === category);
-    }
-    
-    if (size) {
-        filtered = filtered.filter(product => product.size === size);
-    }
-    
-    if (color) {
-        filtered = filtered.filter(product => product.color === color);
-    }
-    
-    if (searchTerm) {
-        filtered = filtered.filter(product => 
-            product.name.toLowerCase().includes(searchTerm) || 
-            product.description.toLowerCase().includes(searchTerm)
-        );
-    }
-    
-    renderProducts(filtered);
+    enhancedFilterProducts();
 }
 
 // عرض الرسائل
@@ -2282,4 +2275,458 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById(tabId).classList.add('active');
         });
     });
+});
+
+// نظام بحث وفلترة محسن
+function initializeEnhancedSearch() {
+    
+    // تحسين مستمعي الأحداث
+    setupEnhancedSearchListeners();
+    
+    // تهيئة البحث الفوري
+    initializeRealTimeSearch();
+    
+    // تهيئة جميع مكونات الفلترة
+    setTimeout(() => {
+        setupAdvancedFilters();
+        initializePriceSlider();
+        initializeClothingTypeFilter();
+    }, 100);
+}
+
+// إعداد الفلترة المتقدمة
+// إعداد الفلترة المتقدمة
+function setupAdvancedFilters() {
+    const toggleBtn = document.getElementById('toggle-filters');
+    const advancedFilters = document.getElementById('advanced-filters');
+    
+    if (toggleBtn && advancedFilters) {
+        toggleBtn.addEventListener('click', function() {
+            const advancedContent = document.getElementById('advanced-filters-content');
+            const filterTags = document.getElementById('filter-tags');
+            
+            if (advancedContent.style.display === 'none') {
+                // إظهار الفلاتر
+                advancedContent.style.display = 'grid';
+                filterTags.style.display = 'flex';
+                this.innerHTML = '<i class="fas fa-eye-slash"></i> إخفاء الفلاتر';
+            } else {
+                // إخفاء الفلاتر
+                advancedContent.style.display = 'none';
+                filterTags.style.display = 'none';
+                this.innerHTML = '<i class="fas fa-eye"></i> إظهار الفلاتر';
+            }
+        });
+    }
+    
+    // إضافة مستمعي الأحداث للفلاتر الجديدة
+    const minPriceInput = document.getElementById('min-price');
+    const maxPriceInput = document.getElementById('max-price');
+    const productTypeFilter = document.getElementById('product-type-filter');
+    const availabilityFilter = document.getElementById('availability-filter');
+    const sortBySelect = document.getElementById('sort-by');
+    
+    if (minPriceInput) minPriceInput.addEventListener('input', debounce(enhancedFilterProducts, 300));
+    if (maxPriceInput) maxPriceInput.addEventListener('input', debounce(enhancedFilterProducts, 300));
+    if (availabilityFilter) availabilityFilter.addEventListener('change', enhancedFilterProducts);
+    if (sortBySelect) sortBySelect.addEventListener('change', enhancedFilterProducts);
+}
+
+// تحسين مستمعي الأحداث للبحث
+function setupEnhancedSearchListeners() {
+    const searchInput = document.querySelector('.search-box input');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(enhancedFilterProducts, 500));
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                enhancedFilterProducts();
+            }
+        });
+    }
+    
+    // الفلاتر الحالية
+    const categoryFilter = document.getElementById('category-filter');
+    const sizeFilter = document.getElementById('size-filter');
+    const colorFilter = document.getElementById('color-filter');
+    
+    if (categoryFilter) categoryFilter.addEventListener('change', enhancedFilterProducts);
+    if (sizeFilter) sizeFilter.addEventListener('change', enhancedFilterProducts);
+    if (colorFilter) colorFilter.addEventListener('change', enhancedFilterProducts);
+}
+
+// تهيئة البحث الفوري
+function initializeRealTimeSearch() {
+    const searchInput = document.querySelector('.search-box input');
+    if (searchInput) {
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.length >= 2 || this.value.length === 0) {
+                    enhancedFilterProducts();
+                }
+            }, 300);
+        });
+    }
+}
+
+// دالة الفلترة المحسنة
+function enhancedFilterProducts() {
+    const searchTerm = document.querySelector('.search-box input')?.value.toLowerCase() || '';
+    const category = document.getElementById('category-filter')?.value || '';
+    const size = document.getElementById('size-filter')?.value || '';
+    const color = document.getElementById('color-filter')?.value || '';
+    const minPrice = parseFloat(document.getElementById('min-price')?.value) || 0;
+    const maxPrice = parseFloat(document.getElementById('max-price')?.value) || 100000;
+    const availability = document.getElementById('availability-filter')?.value || '';
+    const sortBy = document.getElementById('sort-by')?.value || 'newest';
+    
+    // الحصول على أنواع الملابس المختارة
+    const selectedTypes = getSelectedClothingTypes();
+    
+    let filtered = [...products];
+    
+    // البحث في النص
+    if (searchTerm) {
+        filtered = filtered.filter(product => 
+            product.name.toLowerCase().includes(searchTerm) ||
+            product.description.toLowerCase().includes(searchTerm) ||
+            product.category.toLowerCase().includes(searchTerm) ||
+            (product.product_type && product.product_type.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    // الفلترة حسب الفئة
+    if (category) {
+        filtered = filtered.filter(product => product.category === category);
+    }
+    
+    // الفلترة حسب المقاس
+    if (size) {
+        filtered = filtered.filter(product => product.size === size);
+    }
+    
+    // الفلترة حسب اللون
+    if (color) {
+        filtered = filtered.filter(product => product.color === color);
+    }
+    
+    // الفلترة حسب نطاق السعر
+    filtered = filtered.filter(product => {
+        const price = product.price || 0;
+        return price >= minPrice && price <= maxPrice;
+    });
+    
+    // الفلترة حسب نوع الملابس
+    if (selectedTypes.length > 0) {
+        filtered = filtered.filter(product => 
+            product.product_type && selectedTypes.includes(product.product_type)
+        );
+    }
+    
+    // الفلترة حسب التوفر
+    if (availability === 'available') {
+        filtered = filtered.filter(product => product.quantity > 0);
+    } else if (availability === 'out-of-stock') {
+        filtered = filtered.filter(product => product.quantity === 0);
+    }
+    
+    // الترتيب
+    filtered = sortProducts(filtered, sortBy);
+    
+    // تحديث واجهة المستخدم
+    renderEnhancedSearchResults(filtered, searchTerm);
+    updateFilterTags();
+}
+
+
+// ترتيب المنتجات
+function sortProducts(products, sortBy) {
+    switch (sortBy) {
+        case 'newest':
+            return products.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        case 'oldest':
+            return products.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        case 'price-low':
+            return products.sort((a, b) => (a.price || 0) - (b.price || 0));
+        case 'price-high':
+            return products.sort((a, b) => (b.price || 0) - (a.price || 0));
+        case 'name':
+            return products.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+        case 'popular':
+            // يمكنك إضافة منطق الشعبية بناءً على المبيعات أو المشاهدات
+            return products.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+        default:
+            return products;
+    }
+}
+
+// عرض نتائج البحث المحسنة
+function renderEnhancedSearchResults(filteredProducts, searchTerm) {
+    const productsContainer = document.getElementById('products-container');
+    if (!productsContainer) return;
+    
+    // إضافة header للنتائج
+    let resultsHeader = productsContainer.previousElementSibling;
+    if (!resultsHeader || !resultsHeader.classList.contains('search-results-header')) {
+        resultsHeader = document.createElement('div');
+        resultsHeader.className = 'search-results-header';
+        productsContainer.parentNode.insertBefore(resultsHeader, productsContainer);
+    }
+    
+    const resultsCount = filteredProducts.length;
+    const totalProducts = products.length;
+    
+    resultsHeader.innerHTML = `
+        <div class="results-count">
+            ${searchTerm ? `نتائج البحث عن "${searchTerm}" - ` : ''}
+            عرض ${resultsCount} من أصل ${totalProducts} منتج
+        </div>
+        <div class="sort-options">
+            <label for="results-sort">ترتيب حسب:</label>
+            <select id="results-sort">
+                <option value="newest">الأحدث أولاً</option>
+                <option value="oldest">الأقدم أولاً</option>
+                <option value="price-low">السعر: من الأقل للأعلى</option>
+                <option value="price-high">السعر: من الأعلى للأقل</option>
+                <option value="name">الاسم: أ-ي</option>
+            </select>
+        </div>
+    `;
+    
+    // تحديث مستمع حدث الترتيب
+    const resultsSort = document.getElementById('results-sort');
+    if (resultsSort) {
+        resultsSort.value = document.getElementById('sort-by')?.value || 'newest';
+        resultsSort.addEventListener('change', function() {
+            document.getElementById('sort-by').value = this.value;
+            enhancedFilterProducts();
+        });
+    }
+    
+    // عرض المنتجات أو رسالة عدم العثور على نتائج
+    if (filteredProducts.length === 0) {
+        productsContainer.innerHTML = `
+            <div class="no-results">
+                <i class="fas fa-search"></i>
+                <h3>لم نعثر على منتجات تطابق بحثك</h3>
+                <p>جرب تعديل كلمات البحث أو الفلاتر للحصول على نتائج أفضل</p>
+                <button class="submit-btn" onclick="clearAllFilters()">
+                    <i class="fas fa-times"></i> مسح كل الفلاتر
+                </button>
+            </div>
+        `;
+    } else {
+        renderProducts(filteredProducts);
+    }
+}
+
+// تحديث وسوم الفلاتر النشطة
+function updateFilterTags() {
+    const filterTags = document.getElementById('filter-tags');
+    if (!filterTags) return;
+    
+    const activeFilters = getActiveFilters();
+    filterTags.innerHTML = '';
+    
+    activeFilters.forEach(filter => {
+        const tag = document.createElement('div');
+        tag.className = 'filter-tag';
+        tag.innerHTML = `
+            ${filter.label}: ${filter.value}
+            <button type="button" onclick="removeFilter('${filter.type}')">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        filterTags.appendChild(tag);
+    });
+}
+
+// الحصول على الفلاتر النشطة
+function getActiveFilters() {
+    const activeFilters = [];
+    const searchTerm = document.querySelector('.search-box input')?.value;
+    const category = document.getElementById('category-filter')?.value;
+    const size = document.getElementById('size-filter')?.value;
+    const color = document.getElementById('color-filter')?.value;
+    const minPrice = document.getElementById('min-price')?.value;
+    const maxPrice = document.getElementById('max-price')?.value;
+    const availability = document.getElementById('availability-filter')?.value;
+    const selectedTypes = getSelectedClothingTypes();
+    
+    if (searchTerm) activeFilters.push({ type: 'search', label: 'بحث', value: searchTerm });
+    if (category) activeFilters.push({ type: 'category', label: 'الفئة', value: category });
+    if (size) activeFilters.push({ type: 'size', label: 'المقاس', value: size });
+    if (color) activeFilters.push({ type: 'color', label: 'اللون', value: color });
+    if (minPrice && minPrice > 0) activeFilters.push({ type: 'minPrice', label: 'أقل سعر', value: formatPrice(minPrice) + ' ريال' });
+    if (maxPrice && maxPrice < 100000) activeFilters.push({ type: 'maxPrice', label: 'أعلى سعر', value: formatPrice(maxPrice) + ' ريال' });
+    if (availability) activeFilters.push({ type: 'availability', label: 'الحالة', value: availability === 'available' ? 'متوفر' : 'غير متوفر' });
+    
+    // إضافة أنواع الملابس المختارة
+    selectedTypes.forEach(type => {
+        activeFilters.push({ type: 'clothingType', label: 'النوع', value: type });
+    });
+    
+    return activeFilters;
+}
+
+// إزالة فلتر معين
+function removeFilter(filterType) {
+    switch (filterType) {
+        case 'search':
+            document.querySelector('.search-box input').value = '';
+            break;
+        case 'category':
+            document.getElementById('category-filter').value = '';
+            break;
+        case 'size':
+            document.getElementById('size-filter').value = '';
+            break;
+        case 'color':
+            document.getElementById('color-filter').value = '';
+            break;
+        case 'minPrice':
+            document.getElementById('min-price').value = '';
+            break;
+        case 'maxPrice':
+            document.getElementById('max-price').value = '100000';
+            document.getElementById('price-range').value = '100000';
+            document.getElementById('max-price-value').textContent = '100,000 ريال';
+            break;
+        case 'availability':
+            document.getElementById('availability-filter').value = '';
+            break;
+        case 'clothingType':
+            // إلغاء تحديد جميع أنواع الملابس
+            const typeCheckboxes = document.querySelectorAll('.clothing-type-filter input[type="checkbox"]');
+            typeCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('.type-option').classList.remove('active');
+            });
+            break;
+    }
+    enhancedFilterProducts();
+}
+
+
+// مسح كل الفلاتر
+function clearAllFilters() {
+    document.querySelector('.search-box input').value = '';
+    document.getElementById('category-filter').value = '';
+    document.getElementById('size-filter').value = '';
+    document.getElementById('color-filter').value = '';
+    document.getElementById('min-price').value = '';
+    document.getElementById('max-price').value = '100000';
+    document.getElementById('price-range').value = '100000';
+    document.getElementById('max-price-value').textContent = '100,000 ريال';
+    document.getElementById('availability-filter').value = '';
+    document.getElementById('sort-by').value = 'newest';
+    
+    // إلغاء تحديد أنواع الملابس
+    const typeCheckboxes = document.querySelectorAll('.clothing-type-filter input[type="checkbox"]');
+    typeCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.closest('.type-option').classList.remove('active');
+    });
+    
+    enhancedFilterProducts();
+}
+// دالة مساعدة لتنسيق السعر
+function formatPrice(price) {
+    return new Intl.NumberFormat('ar-YE').format(price);
+}
+
+// دالة debounce لتحسين الأداء
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// تهيئة سلايدر السعر
+function initializePriceSlider() {
+    const priceRange = document.getElementById('price-range');
+    const minPriceInput = document.getElementById('min-price');
+    const maxPriceInput = document.getElementById('max-price');
+    const minPriceValue = document.getElementById('min-price-value');
+    const maxPriceValue = document.getElementById('max-price-value');
+
+    if (!priceRange || !minPriceInput || !maxPriceInput) return;
+
+    // تحديث القيم عند تغيير السلايدر
+    priceRange.addEventListener('input', function() {
+        const maxPrice = parseInt(this.value);
+        maxPriceInput.value = maxPrice;
+        maxPriceValue.textContent = formatPrice(maxPrice) + ' ريال';
+        enhancedFilterProducts();
+    });
+
+    // تحديث السلايدر عند تغيير المدخلات
+    minPriceInput.addEventListener('input', function() {
+        const minPrice = parseInt(this.value) || 0;
+        minPriceValue.textContent = formatPrice(minPrice) + ' ريال';
+        enhancedFilterProducts();
+    });
+
+    maxPriceInput.addEventListener('input', function() {
+        const maxPrice = parseInt(this.value) || 100000;
+        priceRange.value = maxPrice;
+        maxPriceValue.textContent = formatPrice(maxPrice) + ' ريال';
+        enhancedFilterProducts();
+    });
+
+    // تعيين القيم الافتراضية
+    const maxPrice = parseInt(priceRange.value);
+    maxPriceValue.textContent = formatPrice(maxPrice) + ' ريال';
+    minPriceValue.textContent = '0 ريال';
+}
+// تهيئة فلترة نوع الملابس
+function initializeClothingTypeFilter() {
+    const typeOptions = document.querySelectorAll('.clothing-type-filter input[type="checkbox"]');
+    
+    typeOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            // إضافة/إزالة class active للعنصر الأب
+            const parentLabel = this.closest('.type-option');
+            if (this.checked) {
+                parentLabel.classList.add('active');
+            } else {
+                parentLabel.classList.remove('active');
+            }
+            enhancedFilterProducts();
+        });
+    });
+}
+
+// الحصول على أنواع الملابس المختارة
+function getSelectedClothingTypes() {
+    const selectedTypes = [];
+    const typeCheckboxes = document.querySelectorAll('.clothing-type-filter input[type="checkbox"]:checked');
+    
+    typeCheckboxes.forEach(checkbox => {
+        selectedTypes.push(checkbox.value);
+    });
+    
+    return selectedTypes;
+}
+
+// تهيئة الموقع
+document.addEventListener('DOMContentLoaded', async function() {
+    initializeDOMElements();
+    await loadProducts();
+    await checkAuthState();
+    setupEventListeners();
+    setupGlobalEventDelegation();
+    
+    // تهيئة نظام البحث المحسن بعد تحميل الصفحة
+    setTimeout(() => {
+        initializeEnhancedSearch();
+    }, 500);
 });
