@@ -2307,14 +2307,18 @@ function setupAdvancedFilters() {
             
             if (advancedContent.style.display === 'none') {
                 // إظهار الفلاتر
-                advancedContent.style.display = 'grid';
+                advancedContent.style.display = 'block'; // تغيير من grid إلى block
                 filterTags.style.display = 'flex';
                 this.innerHTML = '<i class="fas fa-eye-slash"></i> إخفاء الفلاتر';
+                advancedFilters.style.borderBottomLeftRadius = '12px'; // استعادة الزوايا
+                advancedFilters.style.borderBottomRightRadius = '12px';
             } else {
                 // إخفاء الفلاتر
                 advancedContent.style.display = 'none';
                 filterTags.style.display = 'none';
                 this.innerHTML = '<i class="fas fa-eye"></i> إظهار الفلاتر';
+                advancedFilters.style.borderBottomLeftRadius = '0'; // جعل الزوايا مربعة عند الإخفاء
+                advancedFilters.style.borderBottomRightRadius = '0';
             }
         });
     }

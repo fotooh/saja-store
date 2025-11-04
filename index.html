@@ -67,14 +67,18 @@
     </div>
 </section>
 
- <section class="filters">
+ <section class="search-section">
+    <div class="container">
+        <div class="search-box">
+            <input type="text" placeholder="ابحث عن منتج، فئة، وصف، نوع ملابس...">
+            <i class="fas fa-search"></i>
+        </div>
+    </div>
+</section>
+
+<section class="filters">
     <div class="container">
         <div class="filter-row">
-            <div class="search-box">
-                <input type="text" placeholder="ابحث عن منتج، فئة، وصف، نوع ملابس...">
-                <i class="fas fa-search"></i>
-            </div>
-            
             <div class="filter-group">
                 <label for="category-filter">الفئة:</label>
                 <select id="category-filter">
@@ -131,70 +135,70 @@
             </div>
         </div>
         
-<div class="advanced-filters" id="advanced-filters">
-    <div class="advanced-filters-header">
-        <h4><i class="fas fa-filter"></i> فلاتر متقدمة</h4>
-        <button class="toggle-filters" id="toggle-filters" type="button">
-            <i class="fas fa-eye-slash"></i> إخفاء الفلاتر
-        </button>
-    </div>
-    <div class="advanced-filters-content" id="advanced-filters-content">
-        <!-- فلترة السعر -->
-        <div class="price-filter">
-            <label><i class="fas fa-tag"></i> نطاق السعر (ريال يمني)</label>
-            <div class="price-slider">
-                <input type="range" id="price-range" min="0" max="100000" step="1000" value="100000">
-                <div class="price-values">
-                    <span id="min-price-value">0 ريال</span>
-                    <span id="max-price-value">100,000 ريال</span>
+        <div class="advanced-filters" id="advanced-filters">
+            <div class="advanced-filters-header">
+                <h4><i class="fas fa-filter"></i> فلاتر متقدمة</h4>
+                <button class="toggle-filters" id="toggle-filters" type="button">
+                    <i class="fas fa-eye-slash"></i> إخفاء الفلاتر
+                </button>
+            </div>
+            <div class="advanced-filters-content" id="advanced-filters-content">
+                <!-- فلترة السعر -->
+                <div class="price-filter">
+                    <label><i class="fas fa-tag"></i> نطاق السعر (ريال يمني)</label>
+                    <div class="price-slider">
+                        <input type="range" id="price-range" min="0" max="100000" step="1000" value="100000">
+                        <div class="price-values">
+                            <span id="min-price-value">0 ريال</span>
+                            <span id="max-price-value">100,000 ريال</span>
+                        </div>
+                    </div>
+                    <div class="range-inputs">
+                        <input type="number" id="min-price" placeholder="أقل سعر" min="0" max="100000" value="0">
+                        <span>إلى</span>
+                        <input type="number" id="max-price" placeholder="أعلى سعر" min="0" max="100000" value="100000">
+                    </div>
                 </div>
+                
+                <!-- فلترة نوع الملابس -->
+                <div class="filter-group">
+                    <label><i class="fas fa-tshirt"></i> نوع الملابس</label>
+                    <div class="clothing-type-filter" id="clothing-type-filter">
+                        <label class="type-option">
+                            <input type="checkbox" value="شتوية"> شتوية
+                        </label>
+                        <label class="type-option">
+                            <input type="checkbox" value="صيفية"> صيفية
+                        </label>
+                        <label class="type-option">
+                            <input type="checkbox" value="حفلات"> حفلات
+                        </label>
+                        <label class="type-option">
+                            <input type="checkbox" value="رياضية"> رياضية
+                        </label>
+                        <label class="type-option">
+                            <input type="checkbox" value="عمل"> عمل
+                        </label>
+                        <label class="type-option">
+                            <input type="checkbox" value="منزلية"> منزلية
+                        </label>
+                        <label class="type-option">
+                            <input type="checkbox" value="سباحة"> سباحة
+                        </label>
+                        <label class="type-option">
+                            <input type="checkbox" value="تقليدية"> تقليدية
+                        </label>
+                        <label class="type-option">
+                            <input type="checkbox" value="عصرية"> عصرية
+                        </label>
+                    </div>
+                </div>
+                
             </div>
-            <div class="range-inputs">
-                <input type="number" id="min-price" placeholder="أقل سعر" min="0" max="100000" value="0">
-                <span>إلى</span>
-                <input type="number" id="max-price" placeholder="أعلى سعر" min="0" max="100000" value="100000">
+            <div class="filter-tags" id="filter-tags">
+                <!-- سيتم إضافة الوسوم هنا ديناميكياً -->
             </div>
         </div>
-        
-        <!-- فلترة نوع الملابس -->
-        <div class="filter-group">
-            <label><i class="fas fa-tshirt"></i> نوع الملابس</label>
-            <div class="clothing-type-filter" id="clothing-type-filter">
-                <label class="type-option">
-                    <input type="checkbox" value="شتوية"> شتوية
-                </label>
-                <label class="type-option">
-                    <input type="checkbox" value="صيفية"> صيفية
-                </label>
-                <label class="type-option">
-                    <input type="checkbox" value="حفلات"> حفلات
-                </label>
-                <label class="type-option">
-                    <input type="checkbox" value="رياضية"> رياضية
-                </label>
-                <label class="type-option">
-                    <input type="checkbox" value="عمل"> عمل
-                </label>
-                <label class="type-option">
-                    <input type="checkbox" value="منزلية"> منزلية
-                </label>
-                <label class="type-option">
-                    <input type="checkbox" value="سباحة"> سباحة
-                </label>
-                <label class="type-option">
-                    <input type="checkbox" value="تقليدية"> تقليدية
-                </label>
-                <label class="type-option">
-                    <input type="checkbox" value="عصرية"> عصرية
-                </label>
-            </div>
-        </div>
-        
-    </div>
-    <div class="filter-tags" id="filter-tags">
-        <!-- سيتم إضافة الوسوم هنا ديناميكياً -->
-    </div>
-</div>
     </div>
 </section>
 
