@@ -15,6 +15,7 @@ let closeCart, checkoutBtn, mobileMenu, nav, authModal, closeAuth, loginBtn, reg
 let authTabs, loginForm, registerForm, dashboard, logoutBtn, tabBtns, tabContents;
 let dashboardProducts, addProductForm, categoryFilter, sizeFilter, colorFilter, searchInput;
 let productDetailModal, productDetailContainer, closeDetail;
+let mobileOverlay;
 
 // تهيئة الموقع
 document.addEventListener('DOMContentLoaded', async function() {
@@ -37,6 +38,16 @@ function initializeDOMElements() {
     cartIcon = document.querySelector('.cart-icon');
     closeCart = document.querySelector('.close-cart');
     checkoutBtn = document.querySelector('.checkout-btn');
+
+    // إنشاء overlay إذا لم يكن موجوداً
+    if (!document.getElementById('mobile-overlay')) {
+        mobileOverlay = document.createElement('div');
+        mobileOverlay.id = 'mobile-overlay';
+        mobileOverlay.className = 'mobile-overlay';
+        document.body.appendChild(mobileOverlay);
+    } else {
+        mobileOverlay = document.getElementById('mobile-overlay');
+    }
     
     // ✅ إصلاح: البحث عن العناصر بشكل آمن
     if (!cartIcon) cartIcon = document.querySelector('.header-actions .cart-icon');
@@ -132,6 +143,21 @@ function setupGlobalEventDelegation() {
 
 // إعداد مستمعي الأحداث
 function setupEventListeners() {
+
+    // إظهار/إخفاء القائمة على الهواتف
+    if (mobileMenu) {
+        mobileMenu.addEventListener('click', function() {
+            toggleMobileMenu();
+        });
+    }
+    
+    // إغلاق القائمة عند النقر على overlay
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', function() {
+            closeMobileMenu();
+        });
+    }
+
     function bindCartEvents() {
         if (cartIcon) {
             cartIcon.removeEventListener('click', openCart);
@@ -2733,4 +2759,23 @@ document.addEventListener('DOMContentLoaded', async function() {
     setTimeout(() => {
         initializeEnhancedSearch();
     }, 500);
+});
+
+// دوال جديدة لإدارة القائمة الجوال
+function toggleMobileMenu() {
+    if (nav) nav.classList.toggle('active');
+    if (mobileOverlay) mobileOverlay.classList.toggle('active');
+    document.body.classList.toggle('menu-open');
+}
+
+function closeMobileMenu() {
+    if (nav) nav.classList.remove('active');
+    if (mobileOverlay) mobileOverlay.classList.remove('active');
+    document.body.classList.remove('menu-open');
+}
+// إغلاق القائمة عند النقر على رابط
+document.addEventListener('click', function(e) {
+    if (e.target.matches('nav a') && window.innerWidth <= 768) {
+        closeMobileMenu();
+    }
 });

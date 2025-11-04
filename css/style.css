@@ -351,7 +351,6 @@ nav ul li a:hover {
 }
 
 .advanced-filters-content {
-    display: none;
     padding: 1.5rem;
 }
 
@@ -1854,35 +1853,66 @@ footer {
 
     nav {
         position: fixed;
-        top: 120px;
-        left: 0;
-        width: 60%;
-        height: calc(100vh - 80px);
-        background-color: var(--light);
-        box-shadow: 2px 0 15px rgba(255, 255, 255, 0.1);
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
+        top: 0;
+        left: -100%;  /* تغيير من transform إلى left */
+        width: 80%;
+        height: 100vh;
+        background-color: white;
+        box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+        transition: left 0.3s ease;
         overflow-y: auto;
         z-index: 1000;
+        padding-top: 80px;
     }
     
     nav.active {
-        transform: translateX(0);
+        left: 0;  /* إظهار القائمة */
     }
     
     nav ul {
         flex-direction: column;
         padding: 20px;
-        align-items: center;
+        align-items: flex-start;
     }
     
     nav ul li {
         margin: 0 0 15px 0;
+        width: 100%;
+    }
+    
+    nav ul li a {
+        display: block;
+        padding: 10px 15px;
+        width: 100%;
+        border-bottom: 1px solid #eee;
     }
     
     .mobile-menu {
         display: block;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 1001;
     }
+    /* إضافة overlay للقائمة الجوال */
+.mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+}
+
+.mobile-overlay.active {
+    display: block;
+}
+
+/* منع التمرير عند فتح القائمة */
+body.menu-open {
+    overflow: hidden;
+}
     
     .hero h2 {
         font-size: 2rem;
