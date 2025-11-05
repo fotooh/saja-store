@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // تهيئة عناصر DOM
-// تهيئة عناصر DOM
 function initializeDOMElements() {
     console.log('🔄 Initializing DOM elements...');
     
@@ -2782,7 +2781,7 @@ function closeMobileMenu() {
 }
 // إغلاق القائمة عند النقر على رابط
 document.addEventListener('click', function(e) {
-    if (e.target.matches('nav a') && window.innerWidth <= 768) {
+    if ((e.target.matches('nav a') && window.innerWidth <= 768)||(e.target.matches('nav i') && window.innerWidth <= 768)) {
         closeMobileMenu();
     }
 });
