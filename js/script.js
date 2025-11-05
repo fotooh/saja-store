@@ -27,7 +27,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // تهيئة عناصر DOM
+// تهيئة عناصر DOM
 function initializeDOMElements() {
+    console.log('🔄 Initializing DOM elements...');
+    
     // عناصر المنتجات والسلة
     productsContainer = document.getElementById('products-container');
     cartSidebar = document.getElementById('cart-sidebar');
@@ -38,24 +41,19 @@ function initializeDOMElements() {
     cartIcon = document.querySelector('.cart-icon');
     closeCart = document.querySelector('.close-cart');
     checkoutBtn = document.querySelector('.checkout-btn');
-
-    // إنشاء overlay إذا لم يكن موجوداً
-    if (!document.getElementById('mobile-overlay')) {
-        mobileOverlay = document.createElement('div');
-        mobileOverlay.id = 'mobile-overlay';
-        mobileOverlay.className = 'mobile-overlay';
-        document.body.appendChild(mobileOverlay);
-    } else {
-        mobileOverlay = document.getElementById('mobile-overlay');
-    }
     
-    // ✅ إصلاح: البحث عن العناصر بشكل آمن
+    // ✅ إصلاح: البحث المتعدد للعناصر
     if (!cartIcon) cartIcon = document.querySelector('.header-actions .cart-icon');
     if (!cartCount) cartCount = document.querySelector('.header-actions .cart-count');
     
-    // عناصر التنقل
+    // عناصر التنقل - البحث المباشر
     mobileMenu = document.querySelector('.mobile-menu');
     nav = document.querySelector('nav');
+    
+    console.log('✅ Navigation elements:', { 
+        mobileMenu: !!mobileMenu, 
+        nav: !!nav 
+    });
     
     // عناصر المصادقة
     authModal = document.getElementById('auth-modal');
@@ -85,9 +83,18 @@ function initializeDOMElements() {
     productDetailContainer = document.getElementById('product-detail-container');
     closeDetail = document.querySelector('.close-detail');
 
-     setTimeout(() => {
-        initializeEnhancedSearch();
-    }, 1000);
+    // ✅ إنشاء overlay للقائمة الجوال
+    if (!document.getElementById('mobile-overlay')) {
+        mobileOverlay = document.createElement('div');
+        mobileOverlay.id = 'mobile-overlay';
+        mobileOverlay.className = 'mobile-overlay';
+        document.body.appendChild(mobileOverlay);
+        console.log('✅ Mobile overlay created');
+    } else {
+        mobileOverlay = document.getElementById('mobile-overlay');
+    }
+    
+    console.log('🎯 DOM elements initialization completed');
 }
 
 // ✅ إضافة event delegation عالمي
@@ -145,19 +152,7 @@ function setupGlobalEventDelegation() {
 function setupEventListeners() {
 
     // إظهار/إخفاء القائمة على الهواتف
-    if (mobileMenu) {
-        mobileMenu.addEventListener('click', function() {
-            toggleMobileMenu();
-        });
-    }
     
-    // إغلاق القائمة عند النقر على overlay
-    if (mobileOverlay) {
-        mobileOverlay.addEventListener('click', function() {
-            closeMobileMenu();
-        });
-    }
-
     function bindCartEvents() {
         if (cartIcon) {
             cartIcon.removeEventListener('click', openCart);
@@ -173,6 +168,18 @@ function setupEventListeners() {
             cartOverlay.removeEventListener('click', closeCartSidebar);
             cartOverlay.addEventListener('click', closeCartSidebar);
         }
+        if (mobileMenu) {
+        mobileMenu.addEventListener('click', function() {
+            toggleMobileMenu();
+        });
+    }
+    
+        if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', function() {
+            closeMobileMenu();
+        });
+    }
+
     }
     
     // ✅ إصلاح: استخدام arrow functions في setTimeout
