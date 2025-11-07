@@ -1775,18 +1775,34 @@ function closeProductDetail() {
         document.body.style.overflow = '';
     }
 }
-
-// عرض تفاصيل المنتج
+// عرض تفاصيل المنتج مع الصور المتعددة
 function renderProductDetail(product) {
     if (!productDetailContainer) return;
     
     const isAvailable = product.quantity > 0;
+    const images = product.images || [product.image || 'images/placeholder.jpg'];
     
     productDetailContainer.innerHTML = `
-        <div class="product-detail-image">
-            <img src="${product.image || 'images/placeholder.jpg'}" 
-                 alt="${product.name}">
+        <div class="product-detail-gallery">
+            <div class="main-image-container">
+                <img src="${images[0]}" alt="${product.name}" id="main-product-image">
+                ${images.length > 1 ? `
+                    <button class="gallery-nav prev-image"><i class="fas fa-chevron-right"></i></button>
+                    <button class="gallery-nav next-image"><i class="fas fa-chevron-left"></i></button>
+                ` : ''}
+            </div>
+            
+            ${images.length > 1 ? `
+                <div class="image-thumbnails">
+                    ${images.map((img, index) => `
+                        <div class="thumbnail ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <img src="${img}" alt="${product.name} - صورة ${index + 1}">
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
         </div>
+        
         <div class="product-detail-info">
             <div class="product-detail-category">${product.category || 'عام'}</div>
             <h1 class="product-detail-title">${product.name}</h1>
@@ -1839,9 +1855,91 @@ function renderProductDetail(product) {
         </div>
     `;
     
-    // إضافة مستمعي الأحداث للكمية والإضافة
+    // إعداد مستمعي الأحداث للصور المتعددة
+    if (images.length > 1) {
+        setupImageGallery(images);
+    }
+    
     setupDetailEventListeners(product);
 }
+
+// إعداد معرض الصور
+function setupImageGallery(images) {
+    const mainImage = document.getElementById('main-product-image');
+    const thumbnails = document.querySelectorAll('.thumbnail');
+    const prevBtn = document.querySelector('.prev-image');
+    const nextBtn = document.querySelector('.next-image');
+    
+    let currentImageIndex = 0;
+
+    // تحديث الصورة الرئيسية
+    function updateMainImage(index) {
+        mainImage.src = images[index];
+        currentImageIndex = index;
+        
+        // تحديث التصغيرات النشطة
+        thumbnails.forEach((thumb, i) => {
+            thumb.classList.toggle('active', i === index);
+        });
+    }
+
+    // أحداث التصغيرات
+    thumbnails.forEach((thumb, index) => {
+        thumb.addEventListener('click', () => {
+            updateMainImage(index);
+        });
+    });
+
+    // التنقل بين الصور
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            let newIndex = currentImageIndex - 1;
+            if (newIndex < 0) newIndex = images.length - 1;
+            updateMainImage(newIndex);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            let newIndex = currentImageIndex + 1;
+            if (newIndex >= images.length) newIndex = 0;
+            updateMainImage(newIndex);
+        });
+    }
+
+    // التنقل بالسلويدر (سحب الصور)
+    let startX = 0;
+    let endX = 0;
+    
+    mainImage.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+    });
+
+    mainImage.addEventListener('touchend', (e) => {
+        endX = e.changedTouches[0].clientX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = startX - endX;
+
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                // سحب لليسار - الصورة التالية
+                let newIndex = currentImageIndex + 1;
+                if (newIndex >= images.length) newIndex = 0;
+                updateMainImage(newIndex);
+            } else {
+                // سحب لليمين - الصورة السابقة
+                let newIndex = currentImageIndex - 1;
+                if (newIndex < 0) newIndex = images.length - 1;
+                updateMainImage(newIndex);
+            }
+        }
+    }
+}
+
 
 // إعداد مستمعي الأحداث لصفحة التفاصيل
 function setupDetailEventListeners(product) {
@@ -2752,20 +2850,6 @@ function getSelectedClothingTypes() {
     
     return selectedTypes;
 }
-
-// تهيئة الموقع
-document.addEventListener('DOMContentLoaded', async function() {
-    initializeDOMElements();
-    await loadProducts();
-    await checkAuthState();
-    setupEventListeners();
-    setupGlobalEventDelegation();
-    
-    // تهيئة نظام البحث المحسن بعد تحميل الصفحة
-    setTimeout(() => {
-        initializeEnhancedSearch();
-    }, 500);
-});
 
 // دوال جديدة لإدارة القائمة الجوال
 function toggleMobileMenu() {
