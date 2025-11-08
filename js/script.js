@@ -150,7 +150,6 @@ function setupGlobalEventDelegation() {
 // إعداد مستمعي الأحداث
 function setupEventListeners() {
 
-    // إظهار/إخفاء القائمة على الهواتف
     
     function bindCartEvents() {
         if (cartIcon) {
@@ -190,12 +189,6 @@ function setupEventListeners() {
         }, 100);
     };
     
-    // إظهار/إخفاء القائمة على الهواتف
-    if (mobileMenu) {
-        mobileMenu.addEventListener('click', function() {
-            if (nav) nav.classList.toggle('active');
-        });
-    }
     
     // ✅ إصلاح: ربط الأحداث بشكل آمن
     if (cartIcon) cartIcon.addEventListener('click', openCart);
